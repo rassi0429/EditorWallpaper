@@ -14,12 +14,19 @@ namespace EditorBackground
         private ScaleMode scaleMode;
         private Color tintColor;
         private bool globalMode;
+        private bool overlayEnabled;
+        private Color overlayColor;
+        private bool borderEnabled;
+        private Color borderColor;
+        private float borderWidth;
+
+        private Vector2 scrollPosition;
 
         [MenuItem("Tools/Editor Background/Settings")]
         public static void ShowWindow()
         {
             var window = GetWindow<EditorBackgroundWindow>("Editor Background");
-            window.minSize = new Vector2(350, 340);
+            window.minSize = new Vector2(350, 400);
             window.LoadCurrentSettings();
         }
 
@@ -36,6 +43,11 @@ namespace EditorBackground
             scaleMode = EditorBackgroundSettings.ScaleMode;
             tintColor = EditorBackgroundSettings.TintColor;
             globalMode = EditorBackgroundSettings.GlobalMode;
+            overlayEnabled = EditorBackgroundSettings.OverlayEnabled;
+            overlayColor = EditorBackgroundSettings.OverlayColor;
+            borderEnabled = EditorBackgroundSettings.BorderEnabled;
+            borderColor = EditorBackgroundSettings.BorderColor;
+            borderWidth = EditorBackgroundSettings.BorderWidth;
 
             if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
             {
@@ -49,6 +61,8 @@ namespace EditorBackground
 
         private void OnGUI()
         {
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Editor Background Settings", EditorStyles.boldLabel);
             EditorGUILayout.Space(10);
@@ -64,7 +78,11 @@ namespace EditorBackground
                 EditorBackgroundSettings.Enabled = enabled;
             }
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(15);
+
+            // === Background Image Section ===
+            EditorGUILayout.LabelField("Background Image", EditorStyles.boldLabel);
+            EditorGUILayout.Space(5);
 
             // Image Selection
             EditorGUILayout.BeginHorizontal();
@@ -85,7 +103,7 @@ namespace EditorBackground
                 }
             }
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(5);
 
             // Opacity Slider
             EditorGUILayout.BeginHorizontal();
@@ -99,7 +117,7 @@ namespace EditorBackground
                 EditorBackgroundSettings.Opacity = opacity;
             }
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(5);
 
             // Scale Mode
             var newScaleMode = (ScaleMode)EditorGUILayout.EnumPopup("Scale Mode", scaleMode);
@@ -109,7 +127,7 @@ namespace EditorBackground
                 EditorBackgroundSettings.ScaleMode = scaleMode;
             }
 
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(5);
 
             // Tint Color
             var newTintColor = EditorGUILayout.ColorField("Tint Color", tintColor);
@@ -119,9 +137,7 @@ namespace EditorBackground
                 EditorBackgroundSettings.TintColor = tintColor;
             }
 
-            EditorGUILayout.Space(15);
-            DrawSeparator();
-            EditorGUILayout.Space(10);
+            EditorGUILayout.Space(5);
 
             // Global Mode Toggle
             var newGlobalMode = EditorGUILayout.Toggle(
@@ -131,6 +147,86 @@ namespace EditorBackground
             {
                 globalMode = newGlobalMode;
                 EditorBackgroundSettings.GlobalMode = globalMode;
+            }
+
+            EditorGUILayout.Space(15);
+            DrawSeparator();
+            EditorGUILayout.Space(10);
+
+            // === Color Overlay Section ===
+            EditorGUILayout.LabelField("Color Overlay", EditorStyles.boldLabel);
+            EditorGUILayout.Space(5);
+
+            // Overlay Enabled
+            var newOverlayEnabled = EditorGUILayout.Toggle(
+                new GUIContent("Enable Overlay", "ウィンドウ全体に半透明のカラーを重ねる"),
+                overlayEnabled);
+            if (newOverlayEnabled != overlayEnabled)
+            {
+                overlayEnabled = newOverlayEnabled;
+                EditorBackgroundSettings.OverlayEnabled = overlayEnabled;
+            }
+
+            using (new EditorGUI.DisabledGroupScope(!overlayEnabled))
+            {
+                EditorGUILayout.Space(5);
+
+                // Overlay Color
+                var newOverlayColor = EditorGUILayout.ColorField(
+                    new GUIContent("Overlay Color", "オーバーレイの色（アルファ値で透明度を調整）"),
+                    overlayColor, true, true, false);
+                if (newOverlayColor != overlayColor)
+                {
+                    overlayColor = newOverlayColor;
+                    EditorBackgroundSettings.OverlayColor = overlayColor;
+                }
+            }
+
+            EditorGUILayout.Space(15);
+            DrawSeparator();
+            EditorGUILayout.Space(10);
+
+            // === Border Section ===
+            EditorGUILayout.LabelField("Window Border", EditorStyles.boldLabel);
+            EditorGUILayout.Space(5);
+
+            // Border Enabled
+            var newBorderEnabled = EditorGUILayout.Toggle(
+                new GUIContent("Enable Border", "ウィンドウの縁にカラーボーダーを追加"),
+                borderEnabled);
+            if (newBorderEnabled != borderEnabled)
+            {
+                borderEnabled = newBorderEnabled;
+                EditorBackgroundSettings.BorderEnabled = borderEnabled;
+            }
+
+            using (new EditorGUI.DisabledGroupScope(!borderEnabled))
+            {
+                EditorGUILayout.Space(5);
+
+                // Border Color
+                var newBorderColor = EditorGUILayout.ColorField(
+                    new GUIContent("Border Color", "ボーダーの色"),
+                    borderColor, true, true, false);
+                if (newBorderColor != borderColor)
+                {
+                    borderColor = newBorderColor;
+                    EditorBackgroundSettings.BorderColor = borderColor;
+                }
+
+                EditorGUILayout.Space(5);
+
+                // Border Width
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent("Border Width", "ボーダーの太さ (1-10px)"));
+                var newBorderWidth = EditorGUILayout.Slider(borderWidth, 1f, 10f);
+                EditorGUILayout.EndHorizontal();
+
+                if (!Mathf.Approximately(newBorderWidth, borderWidth))
+                {
+                    borderWidth = newBorderWidth;
+                    EditorBackgroundSettings.BorderWidth = borderWidth;
+                }
             }
 
             EditorGUILayout.Space(20);
@@ -160,10 +256,13 @@ namespace EditorBackground
             {
                 DrawSeparator();
                 EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Preview", EditorStyles.boldLabel);
-                EditorGUILayout.LabelField($"Image: {selectedTexture.name}");
+                EditorGUILayout.LabelField("Image Info", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField($"Name: {selectedTexture.name}");
                 EditorGUILayout.LabelField($"Size: {selectedTexture.width} x {selectedTexture.height}");
             }
+
+            EditorGUILayout.Space(10);
+            EditorGUILayout.EndScrollView();
         }
 
         private void DrawSeparator()

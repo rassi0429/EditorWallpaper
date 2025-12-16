@@ -13,9 +13,13 @@ namespace EditorBackground
     public static class EditorBackgroundCore
     {
         private const string BACKGROUND_ELEMENT_NAME = "editor-background-image";
+        private const string OVERLAY_ELEMENT_NAME = "editor-background-overlay";
+        private const string BORDER_ELEMENT_NAME = "editor-background-border";
 
         private static HashSet<EditorWindow> processedWindows = new HashSet<EditorWindow>();
         private static Dictionary<EditorWindow, VisualElement> backgroundElements = new Dictionary<EditorWindow, VisualElement>();
+        private static Dictionary<EditorWindow, VisualElement> overlayElements = new Dictionary<EditorWindow, VisualElement>();
+        private static Dictionary<EditorWindow, VisualElement> borderElements = new Dictionary<EditorWindow, VisualElement>();
 
         // グローバル背景の基準となる境界
         private static Rect globalBounds;
@@ -48,7 +52,7 @@ namespace EditorBackground
 
                 if (!processedWindows.Contains(window))
                 {
-                    ApplyBackground(window);
+                    ApplyAllElements(window);
                     processedWindows.Add(window);
                 }
                 else if (EditorBackgroundSettings.GlobalMode)
@@ -89,23 +93,48 @@ namespace EditorBackground
         {
             processedWindows.RemoveWhere(w => w == null);
 
-            var keysToRemove = backgroundElements.Keys.Where(k => k == null).ToList();
+            CleanupDictionary(backgroundElements);
+            CleanupDictionary(overlayElements);
+            CleanupDictionary(borderElements);
+        }
+
+        private static void CleanupDictionary(Dictionary<EditorWindow, VisualElement> dict)
+        {
+            var keysToRemove = dict.Keys.Where(k => k == null).ToList();
             foreach (var key in keysToRemove)
             {
-                backgroundElements.Remove(key);
+                dict.Remove(key);
             }
         }
 
-        private static void ApplyBackground(EditorWindow window)
+        private static void ApplyAllElements(EditorWindow window)
         {
             if (window == null || window.rootVisualElement == null)
                 return;
 
+            // 背景画像
             var texture = EditorBackgroundSettings.GetTexture();
-            if (texture == null)
-                return;
+            if (texture != null)
+            {
+                ApplyBackground(window, texture);
+            }
 
-            RemoveBackground(window);
+            // オーバーレイ
+            if (EditorBackgroundSettings.OverlayEnabled)
+            {
+                ApplyOverlay(window);
+            }
+
+            // ボーダー
+            if (EditorBackgroundSettings.BorderEnabled)
+            {
+                ApplyBorder(window);
+            }
+        }
+
+        private static void ApplyBackground(EditorWindow window, Texture2D texture)
+        {
+            RemoveElement(window, BACKGROUND_ELEMENT_NAME, backgroundElements);
 
             VisualElement bg;
             if (EditorBackgroundSettings.GlobalMode)
@@ -119,6 +148,24 @@ namespace EditorBackground
 
             window.rootVisualElement.Insert(0, bg);
             backgroundElements[window] = bg;
+        }
+
+        private static void ApplyOverlay(EditorWindow window)
+        {
+            RemoveElement(window, OVERLAY_ELEMENT_NAME, overlayElements);
+
+            var overlay = CreateOverlayElement();
+            window.rootVisualElement.Insert(0, overlay);
+            overlayElements[window] = overlay;
+        }
+
+        private static void ApplyBorder(EditorWindow window)
+        {
+            RemoveElement(window, BORDER_ELEMENT_NAME, borderElements);
+
+            var border = CreateBorderElement();
+            window.rootVisualElement.Add(border);
+            borderElements[window] = border;
         }
 
         /// <summary>
@@ -176,6 +223,49 @@ namespace EditorBackground
             return bg;
         }
 
+        /// <summary>
+        /// オーバーレイ要素を作成
+        /// </summary>
+        private static VisualElement CreateOverlayElement()
+        {
+            var overlay = new VisualElement();
+            overlay.name = OVERLAY_ELEMENT_NAME;
+            overlay.style.position = Position.Absolute;
+            overlay.style.left = 0;
+            overlay.style.top = 0;
+            overlay.style.right = 0;
+            overlay.style.bottom = 0;
+            overlay.style.backgroundColor = EditorBackgroundSettings.OverlayColor;
+            overlay.pickingMode = PickingMode.Ignore;
+
+            return overlay;
+        }
+
+        /// <summary>
+        /// ボーダー要素を作成
+        /// </summary>
+        private static VisualElement CreateBorderElement()
+        {
+            var border = new VisualElement();
+            border.name = BORDER_ELEMENT_NAME;
+            border.style.position = Position.Absolute;
+            border.style.left = 0;
+            border.style.top = 0;
+            border.style.right = 0;
+            border.style.bottom = 0;
+            border.style.borderTopWidth = EditorBackgroundSettings.BorderWidth;
+            border.style.borderBottomWidth = EditorBackgroundSettings.BorderWidth;
+            border.style.borderLeftWidth = EditorBackgroundSettings.BorderWidth;
+            border.style.borderRightWidth = EditorBackgroundSettings.BorderWidth;
+            border.style.borderTopColor = EditorBackgroundSettings.BorderColor;
+            border.style.borderBottomColor = EditorBackgroundSettings.BorderColor;
+            border.style.borderLeftColor = EditorBackgroundSettings.BorderColor;
+            border.style.borderRightColor = EditorBackgroundSettings.BorderColor;
+            border.pickingMode = PickingMode.Ignore;
+
+            return border;
+        }
+
         private static void UpdateInnerBackgroundTransform(EditorWindow window, VisualElement innerBg)
         {
             if (window == null || innerBg == null)
@@ -228,71 +318,71 @@ namespace EditorBackground
             }
         }
 
-        private static void RemoveBackground(EditorWindow window)
+        private static void RemoveElement(EditorWindow window, string elementName, Dictionary<EditorWindow, VisualElement> dict)
         {
             if (window == null || window.rootVisualElement == null)
                 return;
 
-            var existingBg = window.rootVisualElement.Q(BACKGROUND_ELEMENT_NAME);
-            if (existingBg != null)
+            var existing = window.rootVisualElement.Q(elementName);
+            if (existing != null)
             {
-                existingBg.RemoveFromHierarchy();
+                existing.RemoveFromHierarchy();
             }
 
-            backgroundElements.Remove(window);
+            dict.Remove(window);
+        }
+
+        private static void RemoveAllFromWindow(EditorWindow window)
+        {
+            RemoveElement(window, BACKGROUND_ELEMENT_NAME, backgroundElements);
+            RemoveElement(window, OVERLAY_ELEMENT_NAME, overlayElements);
+            RemoveElement(window, BORDER_ELEMENT_NAME, borderElements);
         }
 
         private static void RefreshAllBackgrounds()
         {
-            if (!EditorBackgroundSettings.Enabled)
-            {
-                RemoveAllBackgrounds();
-                return;
-            }
-
-            var texture = EditorBackgroundSettings.GetTexture();
-
-            // 一度全部削除して再適用（設定変更時）
-            foreach (var window in backgroundElements.Keys.ToList())
+            // 一度全部削除
+            foreach (var window in processedWindows.ToList())
             {
                 if (window != null)
                 {
-                    RemoveBackground(window);
-                    processedWindows.Remove(window);
+                    RemoveAllFromWindow(window);
                 }
             }
+            processedWindows.Clear();
 
-            if (texture != null)
+            if (!EditorBackgroundSettings.Enabled)
+                return;
+
+            if (EditorBackgroundSettings.GlobalMode)
             {
-                if (EditorBackgroundSettings.GlobalMode)
-                {
-                    UpdateGlobalBounds();
-                }
+                UpdateGlobalBounds();
+            }
 
-                var allWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-                foreach (var window in allWindows)
+            var allWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
+            foreach (var window in allWindows)
+            {
+                if (window != null)
                 {
-                    if (window != null)
-                    {
-                        ApplyBackground(window);
-                        processedWindows.Add(window);
-                    }
+                    ApplyAllElements(window);
+                    processedWindows.Add(window);
                 }
             }
         }
 
         private static void RemoveAllBackgrounds()
         {
-            foreach (var kvp in backgroundElements.ToList())
+            foreach (var window in processedWindows.ToList())
             {
-                var window = kvp.Key;
                 if (window != null)
                 {
-                    RemoveBackground(window);
+                    RemoveAllFromWindow(window);
                 }
             }
 
             backgroundElements.Clear();
+            overlayElements.Clear();
+            borderElements.Clear();
             processedWindows.Clear();
         }
     }

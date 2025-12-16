@@ -15,6 +15,11 @@ namespace EditorBackground
         private const string KEY_SCALE_MODE = "EditorBackground_ScaleMode";
         private const string KEY_TINT_COLOR = "EditorBackground_TintColor";
         private const string KEY_GLOBAL_MODE = "EditorBackground_GlobalMode";
+        private const string KEY_OVERLAY_ENABLED = "EditorBackground_OverlayEnabled";
+        private const string KEY_OVERLAY_COLOR = "EditorBackground_OverlayColor";
+        private const string KEY_BORDER_ENABLED = "EditorBackground_BorderEnabled";
+        private const string KEY_BORDER_COLOR = "EditorBackground_BorderColor";
+        private const string KEY_BORDER_WIDTH = "EditorBackground_BorderWidth";
 
         private static bool _enabled = true;
         private static string _imagePath = "";
@@ -22,6 +27,11 @@ namespace EditorBackground
         private static ScaleMode _scaleMode = ScaleMode.ScaleAndCrop;
         private static Color _tintColor = Color.white;
         private static bool _globalMode = true;
+        private static bool _overlayEnabled = false;
+        private static Color _overlayColor = new Color(0.2f, 0.4f, 0.8f, 0.1f);
+        private static bool _borderEnabled = false;
+        private static Color _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
+        private static float _borderWidth = 2f;
 
         public static event Action OnSettingsChanged;
 
@@ -110,6 +120,77 @@ namespace EditorBackground
             }
         }
 
+        public static bool OverlayEnabled
+        {
+            get => _overlayEnabled;
+            set
+            {
+                if (_overlayEnabled != value)
+                {
+                    _overlayEnabled = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static Color OverlayColor
+        {
+            get => _overlayColor;
+            set
+            {
+                if (_overlayColor != value)
+                {
+                    _overlayColor = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static bool BorderEnabled
+        {
+            get => _borderEnabled;
+            set
+            {
+                if (_borderEnabled != value)
+                {
+                    _borderEnabled = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static Color BorderColor
+        {
+            get => _borderColor;
+            set
+            {
+                if (_borderColor != value)
+                {
+                    _borderColor = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static float BorderWidth
+        {
+            get => _borderWidth;
+            set
+            {
+                value = Mathf.Clamp(value, 1f, 10f);
+                if (!Mathf.Approximately(_borderWidth, value))
+                {
+                    _borderWidth = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
         public static Texture2D GetTexture()
         {
             if (string.IsNullOrEmpty(_imagePath))
@@ -131,6 +212,11 @@ namespace EditorBackground
             EditorPrefs.SetInt(KEY_SCALE_MODE, (int)_scaleMode);
             EditorPrefs.SetString(KEY_TINT_COLOR, ColorUtility.ToHtmlStringRGBA(_tintColor));
             EditorPrefs.SetBool(KEY_GLOBAL_MODE, _globalMode);
+            EditorPrefs.SetBool(KEY_OVERLAY_ENABLED, _overlayEnabled);
+            EditorPrefs.SetString(KEY_OVERLAY_COLOR, ColorUtility.ToHtmlStringRGBA(_overlayColor));
+            EditorPrefs.SetBool(KEY_BORDER_ENABLED, _borderEnabled);
+            EditorPrefs.SetString(KEY_BORDER_COLOR, ColorUtility.ToHtmlStringRGBA(_borderColor));
+            EditorPrefs.SetFloat(KEY_BORDER_WIDTH, _borderWidth);
         }
 
         public static void Load()
@@ -140,16 +226,23 @@ namespace EditorBackground
             _opacity = EditorPrefs.GetFloat(KEY_OPACITY, 0.08f);
             _scaleMode = (ScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)ScaleMode.ScaleAndCrop);
             _globalMode = EditorPrefs.GetBool(KEY_GLOBAL_MODE, true);
+            _overlayEnabled = EditorPrefs.GetBool(KEY_OVERLAY_ENABLED, false);
+            _borderEnabled = EditorPrefs.GetBool(KEY_BORDER_ENABLED, false);
+            _borderWidth = EditorPrefs.GetFloat(KEY_BORDER_WIDTH, 2f);
 
-            var colorString = EditorPrefs.GetString(KEY_TINT_COLOR, "FFFFFFFF");
-            if (ColorUtility.TryParseHtmlString("#" + colorString, out var color))
+            _tintColor = LoadColor(KEY_TINT_COLOR, Color.white);
+            _overlayColor = LoadColor(KEY_OVERLAY_COLOR, new Color(0.2f, 0.4f, 0.8f, 0.1f));
+            _borderColor = LoadColor(KEY_BORDER_COLOR, new Color(0.4f, 0.6f, 1f, 0.5f));
+        }
+
+        private static Color LoadColor(string key, Color defaultColor)
+        {
+            var colorString = EditorPrefs.GetString(key, "");
+            if (!string.IsNullOrEmpty(colorString) && ColorUtility.TryParseHtmlString("#" + colorString, out var color))
             {
-                _tintColor = color;
+                return color;
             }
-            else
-            {
-                _tintColor = Color.white;
-            }
+            return defaultColor;
         }
 
         public static void ResetToDefault()
@@ -160,6 +253,11 @@ namespace EditorBackground
             _scaleMode = ScaleMode.ScaleAndCrop;
             _tintColor = Color.white;
             _globalMode = true;
+            _overlayEnabled = false;
+            _overlayColor = new Color(0.2f, 0.4f, 0.8f, 0.1f);
+            _borderEnabled = false;
+            _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
+            _borderWidth = 2f;
             Save();
             NotifySettingsChanged();
         }
