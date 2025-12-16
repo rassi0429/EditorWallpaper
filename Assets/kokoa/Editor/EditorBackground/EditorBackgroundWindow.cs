@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -93,14 +94,8 @@ namespace EditorBackground
             borderColor = EditorBackgroundSettings.BorderColor;
             borderWidth = EditorBackgroundSettings.BorderWidth;
 
-            if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
-            {
-                selectedTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(EditorBackgroundSettings.ImagePath);
-            }
-            else
-            {
-                selectedTexture = null;
-            }
+            // GetTexture() は外部ファイル・アセット両方に対応
+            selectedTexture = EditorBackgroundSettings.GetTexture();
         }
 
         private void OnGUI()
@@ -206,23 +201,38 @@ namespace EditorBackground
             // 画像選択
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PrefixLabel(Localization.Image);
-            var newTexture = (Texture2D)EditorGUILayout.ObjectField(selectedTexture, typeof(Texture2D), false);
 
+            // ファイル選択ボタン
+            if (GUILayout.Button(Localization.SelectFile, GUILayout.Width(100)))
+            {
+                var path = EditorUtility.OpenFilePanel(
+                    Localization.SelectImageFile,
+                    "",
+                    "png,jpg,jpeg,gif,bmp,tga");
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    EditorBackgroundSettings.ImagePath = path;
+                    selectedTexture = EditorBackgroundSettings.GetTexture();
+                }
+            }
+
+            // クリアボタン
             using (new EditorGUI.DisabledGroupScope(selectedTexture == null))
             {
                 if (GUILayout.Button(Localization.ClearImage, GUILayout.Width(50)))
                 {
-                    newTexture = null;
+                    EditorBackgroundSettings.ImagePath = "";
+                    selectedTexture = null;
                 }
             }
             EditorGUILayout.EndHorizontal();
 
-            if (newTexture != selectedTexture)
+            // 現在選択中のファイル名を表示
+            if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
             {
-                selectedTexture = newTexture;
-                EditorBackgroundSettings.ImagePath = selectedTexture != null
-                    ? AssetDatabase.GetAssetPath(selectedTexture)
-                    : "";
+                var fileName = Path.GetFileName(EditorBackgroundSettings.ImagePath);
+                EditorGUILayout.LabelField("  " + fileName, EditorStyles.miniLabel);
             }
 
             EditorGUILayout.Space(4);
@@ -423,7 +433,9 @@ namespace EditorBackground
             EditorGUILayout.LabelField(Localization.ImageInfo, EditorStyles.boldLabel);
             EditorGUILayout.Space(4);
 
-            EditorGUILayout.LabelField($"{Localization.ImageName}: {selectedTexture.name}");
+            // パスからファイル名を取得（外部ファイル対応）
+            var fileName = Path.GetFileName(EditorBackgroundSettings.ImagePath);
+            EditorGUILayout.LabelField($"{Localization.ImageName}: {fileName}");
             EditorGUILayout.LabelField($"{Localization.ImageSize}: {selectedTexture.width} x {selectedTexture.height}");
 
             EditorGUILayout.EndVertical();

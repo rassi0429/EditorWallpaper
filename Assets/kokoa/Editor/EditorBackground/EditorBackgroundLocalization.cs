@@ -24,6 +24,8 @@ namespace EditorBackground
         // 背景画像セクション
         public static string BackgroundImageSection => IsJapanese ? "背景画像" : "Background Image";
         public static string Image => IsJapanese ? "画像" : "Image";
+        public static string SelectFile => IsJapanese ? "ファイルを選択" : "Select File";
+        public static string SelectImageFile => IsJapanese ? "画像ファイルを選択" : "Select Image File";
         public static string ClearImage => IsJapanese ? "クリア" : "Clear";
         public static string Opacity => IsJapanese ? "不透明度" : "Opacity";
         public static string OpacityTooltip => IsJapanese

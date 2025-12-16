@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -63,6 +64,10 @@ namespace EditorBackground
 
         public static event Action OnSettingsChanged;
 
+        // テクスチャキャッシュ
+        private static Texture2D _cachedTexture;
+        private static string _cachedTexturePath;
+
         public static bool Enabled
         {
             get => _enabled;
@@ -85,6 +90,8 @@ namespace EditorBackground
                 if (_imagePath != value)
                 {
                     _imagePath = value ?? "";
+                    // キャッシュをクリア
+                    ClearTextureCache();
                     Save();
                     NotifySettingsChanged();
                 }
@@ -266,12 +273,80 @@ namespace EditorBackground
             if (string.IsNullOrEmpty(_imagePath))
                 return null;
 
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(_imagePath);
+            // キャッシュがあればそれを返す
+            if (_cachedTexture != null && _cachedTexturePath == _imagePath)
+                return _cachedTexture;
+
+            Texture2D texture = null;
+
+            // 絶対パスの場合（外部ファイル）
+            if (Path.IsPathRooted(_imagePath))
+            {
+                texture = LoadExternalTexture(_imagePath);
+            }
+            // 相対パスの場合（Unityアセット）
+            else
+            {
+                texture = AssetDatabase.LoadAssetAtPath<Texture2D>(_imagePath);
+            }
+
             if (texture == null)
             {
                 Debug.LogWarning($"[EditorBackground] Image not found: {_imagePath}");
+                return null;
             }
+
+            // キャッシュに保存
+            _cachedTexture = texture;
+            _cachedTexturePath = _imagePath;
+
             return texture;
+        }
+
+        /// <summary>
+        /// 外部ファイルからテクスチャを読み込む
+        /// </summary>
+        private static Texture2D LoadExternalTexture(string absolutePath)
+        {
+            if (!File.Exists(absolutePath))
+                return null;
+
+            try
+            {
+                var bytes = File.ReadAllBytes(absolutePath);
+                var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+
+                if (texture.LoadImage(bytes))
+                {
+                    return texture;
+                }
+                else
+                {
+                    UnityEngine.Object.DestroyImmediate(texture);
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[EditorBackground] Failed to load image: {e.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// テクスチャキャッシュをクリア
+        /// </summary>
+        public static void ClearTextureCache()
+        {
+            if (_cachedTexture != null && Path.IsPathRooted(_cachedTexturePath))
+            {
+                // 外部ファイルから作成したテクスチャは破棄
+                UnityEngine.Object.DestroyImmediate(_cachedTexture);
+            }
+            _cachedTexture = null;
+            _cachedTexturePath = null;
         }
 
         public static void Save()
