@@ -325,15 +325,57 @@ namespace EditorBackground
                     if (texture != null)
                     {
                         float scale = EditorBackgroundSettings.TileScale;
-                        float width = texture.width * scale;
-                        float height = texture.height * scale;
-                        element.style.backgroundSize = new BackgroundSize(width, height);
+                        float w = texture.width * scale;
+                        float h = texture.height * scale;
+                        Debug.Log($"[EditorBackground] Tile - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
+                        var widthLen = new Length(w, LengthUnit.Pixel);
+                        var heightLen = new Length(h, LengthUnit.Pixel);
+                        element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
+                        Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
                     }
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.Repeat, Repeat.Repeat);
+                    break;
+                case BackgroundScaleMode.Corner:
+                    if (texture != null)
+                    {
+                        float scale = EditorBackgroundSettings.TileScale;
+                        float w = texture.width * scale;
+                        float h = texture.height * scale;
+                        Debug.Log($"[EditorBackground] Corner - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
+                        var widthLen = new Length(w, LengthUnit.Pixel);
+                        var heightLen = new Length(h, LengthUnit.Pixel);
+                        element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
+                        Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
+                    }
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    ApplyCornerPosition(element, EditorBackgroundSettings.CornerPosition);
                     break;
                 default:
                     element.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    break;
+            }
+        }
+
+        private static void ApplyCornerPosition(VisualElement element, CornerPosition position)
+        {
+            switch (position)
+            {
+                case CornerPosition.TopLeft:
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top);
+                    break;
+                case CornerPosition.TopRight:
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top);
+                    break;
+                case CornerPosition.BottomLeft:
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom);
+                    break;
+                case CornerPosition.BottomRight:
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom);
                     break;
             }
         }

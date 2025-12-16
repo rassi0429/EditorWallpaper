@@ -31,12 +31,16 @@ namespace EditorBackground
             : "Background image opacity (0 = transparent, 1 = opaque)";
         public static string ScaleMode => IsJapanese ? "スケールモード" : "Scale Mode";
         public static string ScaleModeTooltip => IsJapanese
-            ? "ScaleAndCrop: 画面を覆うようにスケール\nScaleToFit: 画面に収まるようにスケール\nStretchToFill: 画面に合わせて引き伸ばし\nTile: タイル状に繰り返し"
-            : "ScaleAndCrop: Scale to cover\nScaleToFit: Scale to fit\nStretchToFill: Stretch to fill\nTile: Repeat as tiles";
-        public static string TileScale => IsJapanese ? "タイル倍率" : "Tile Scale";
+            ? "ScaleAndCrop: 画面を覆うようにスケール\nScaleToFit: 画面に収まるようにスケール\nStretchToFill: 画面に合わせて引き伸ばし\nTile: タイル状に繰り返し\nCorner: 角基準で1枚配置"
+            : "ScaleAndCrop: Scale to cover\nScaleToFit: Scale to fit\nStretchToFill: Stretch to fill\nTile: Repeat as tiles\nCorner: Single image at corner";
+        public static string TileScale => IsJapanese ? "画像倍率" : "Image Scale";
         public static string TileScaleTooltip => IsJapanese
-            ? "タイルの大きさ (0.1 = 小さく, 1 = 等倍, 5 = 大きく)"
-            : "Tile size (0.1 = smaller, 1 = original, 5 = larger)";
+            ? "画像の大きさ (0.1 = 小さく, 1 = 等倍, 5 = 大きく)"
+            : "Image size (0.1 = smaller, 1 = original, 5 = larger)";
+        public static string CornerPosition => IsJapanese ? "配置位置" : "Position";
+        public static string CornerPositionTooltip => IsJapanese
+            ? "画像を配置する角の位置"
+            : "Corner position for the image";
         public static string TintColor => IsJapanese ? "色調" : "Tint Color";
         public static string TintColorTooltip => IsJapanese
             ? "背景画像に適用する色調"

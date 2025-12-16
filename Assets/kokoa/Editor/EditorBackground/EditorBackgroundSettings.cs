@@ -12,7 +12,16 @@ namespace EditorBackground
         ScaleAndCrop,   // 画面を覆うようにスケール（はみ出し部分はクリップ）
         ScaleToFit,     // 画面に収まるようにスケール（余白あり）
         StretchToFill,  // 画面に合わせて引き伸ばし
-        Tile            // タイル状に繰り返し
+        Tile,           // タイル状に繰り返し
+        Corner          // 角基準で1枚配置
+    }
+
+    public enum CornerPosition
+    {
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
     }
 
     /// <summary>
@@ -33,6 +42,7 @@ namespace EditorBackground
         private const string KEY_BORDER_WIDTH = "EditorBackground_BorderWidth";
         private const string KEY_LANGUAGE = "EditorBackground_Language";
         private const string KEY_TILE_SCALE = "EditorBackground_TileScale";
+        private const string KEY_CORNER_POSITION = "EditorBackground_CornerPosition";
 
         public enum Language { Japanese, English }
 
@@ -41,6 +51,7 @@ namespace EditorBackground
         private static float _opacity = 0.08f;
         private static BackgroundScaleMode _scaleMode = BackgroundScaleMode.ScaleAndCrop;
         private static float _tileScale = 1f;
+        private static CornerPosition _cornerPosition = CornerPosition.BottomRight;
         private static Color _tintColor = Color.white;
         private static bool _globalMode = true;
         private static bool _overlayEnabled = false;
@@ -118,6 +129,20 @@ namespace EditorBackground
                 if (!Mathf.Approximately(_tileScale, value))
                 {
                     _tileScale = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static CornerPosition CornerPosition
+        {
+            get => _cornerPosition;
+            set
+            {
+                if (_cornerPosition != value)
+                {
+                    _cornerPosition = value;
                     Save();
                     NotifySettingsChanged();
                 }
@@ -256,6 +281,7 @@ namespace EditorBackground
             EditorPrefs.SetFloat(KEY_OPACITY, _opacity);
             EditorPrefs.SetInt(KEY_SCALE_MODE, (int)_scaleMode);
             EditorPrefs.SetFloat(KEY_TILE_SCALE, _tileScale);
+            EditorPrefs.SetInt(KEY_CORNER_POSITION, (int)_cornerPosition);
             EditorPrefs.SetString(KEY_TINT_COLOR, ColorUtility.ToHtmlStringRGBA(_tintColor));
             EditorPrefs.SetBool(KEY_GLOBAL_MODE, _globalMode);
             EditorPrefs.SetBool(KEY_OVERLAY_ENABLED, _overlayEnabled);
@@ -273,6 +299,7 @@ namespace EditorBackground
             _opacity = EditorPrefs.GetFloat(KEY_OPACITY, 0.08f);
             _scaleMode = (BackgroundScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)BackgroundScaleMode.ScaleAndCrop);
             _tileScale = EditorPrefs.GetFloat(KEY_TILE_SCALE, 1f);
+            _cornerPosition = (CornerPosition)EditorPrefs.GetInt(KEY_CORNER_POSITION, (int)CornerPosition.BottomRight);
             _globalMode = EditorPrefs.GetBool(KEY_GLOBAL_MODE, true);
             _overlayEnabled = EditorPrefs.GetBool(KEY_OVERLAY_ENABLED, false);
             _borderEnabled = EditorPrefs.GetBool(KEY_BORDER_ENABLED, false);
@@ -301,6 +328,7 @@ namespace EditorBackground
             _opacity = 0.08f;
             _scaleMode = BackgroundScaleMode.ScaleAndCrop;
             _tileScale = 1f;
+            _cornerPosition = CornerPosition.BottomRight;
             _tintColor = Color.white;
             _globalMode = true;
             _overlayEnabled = false;

@@ -13,6 +13,7 @@ namespace EditorBackground
         private float opacity;
         private BackgroundScaleMode scaleMode;
         private float tileScale;
+        private CornerPosition cornerPosition;
         private Color tintColor;
         private bool globalMode;
         private bool overlayEnabled;
@@ -83,6 +84,7 @@ namespace EditorBackground
             opacity = EditorBackgroundSettings.Opacity;
             scaleMode = EditorBackgroundSettings.ScaleMode;
             tileScale = EditorBackgroundSettings.TileScale;
+            cornerPosition = EditorBackgroundSettings.CornerPosition;
             tintColor = EditorBackgroundSettings.TintColor;
             globalMode = EditorBackgroundSettings.GlobalMode;
             overlayEnabled = EditorBackgroundSettings.OverlayEnabled;
@@ -249,8 +251,8 @@ namespace EditorBackground
                 EditorBackgroundSettings.ScaleMode = scaleMode;
             }
 
-            // タイル倍率（タイルモードのときのみ表示）
-            if (scaleMode == BackgroundScaleMode.Tile)
+            // 画像倍率（タイル/コーナーモードのときのみ表示）
+            if (scaleMode == BackgroundScaleMode.Tile || scaleMode == BackgroundScaleMode.Corner)
             {
                 EditorGUILayout.Space(4);
 
@@ -263,6 +265,21 @@ namespace EditorBackground
                 {
                     tileScale = newTileScale;
                     EditorBackgroundSettings.TileScale = tileScale;
+                }
+            }
+
+            // 配置位置（コーナーモードのときのみ表示）
+            if (scaleMode == BackgroundScaleMode.Corner)
+            {
+                EditorGUILayout.Space(4);
+
+                var newCornerPosition = (CornerPosition)EditorGUILayout.EnumPopup(
+                    new GUIContent(Localization.CornerPosition, Localization.CornerPositionTooltip),
+                    cornerPosition);
+                if (newCornerPosition != cornerPosition)
+                {
+                    cornerPosition = newCornerPosition;
+                    EditorBackgroundSettings.CornerPosition = cornerPosition;
                 }
             }
 
