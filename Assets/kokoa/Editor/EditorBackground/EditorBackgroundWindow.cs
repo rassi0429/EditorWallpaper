@@ -1,0 +1,415 @@
+using UnityEditor;
+using UnityEngine;
+
+namespace EditorBackground
+{
+    /// <summary>
+    /// 設定UI
+    /// </summary>
+    public class EditorBackgroundWindow : EditorWindow
+    {
+        private Texture2D selectedTexture;
+        private bool enabled;
+        private float opacity;
+        private BackgroundScaleMode scaleMode;
+        private float tileScale;
+        private Color tintColor;
+        private bool globalMode;
+        private bool overlayEnabled;
+        private Color overlayColor;
+        private bool borderEnabled;
+        private Color borderColor;
+        private float borderWidth;
+
+        private Vector2 scrollPosition;
+
+        // UI Styles
+        private GUIStyle headerStyle;
+        private GUIStyle sectionBoxStyle;
+        private GUIStyle languageButtonStyle;
+        private GUIStyle languageButtonActiveStyle;
+        private bool stylesInitialized;
+
+        [MenuItem("Tools/Editor Background/Settings")]
+        public static void ShowWindow()
+        {
+            var window = GetWindow<EditorBackgroundWindow>("Editor Background");
+            window.minSize = new Vector2(380, 500);
+            window.LoadCurrentSettings();
+        }
+
+        private void OnEnable()
+        {
+            LoadCurrentSettings();
+            stylesInitialized = false;
+        }
+
+        private void InitStyles()
+        {
+            if (stylesInitialized) return;
+
+            headerStyle = new GUIStyle(EditorStyles.boldLabel)
+            {
+                fontSize = 14,
+                margin = new RectOffset(0, 0, 8, 8)
+            };
+
+            sectionBoxStyle = new GUIStyle("box")
+            {
+                padding = new RectOffset(12, 12, 10, 10),
+                margin = new RectOffset(0, 0, 4, 8)
+            };
+
+            languageButtonStyle = new GUIStyle(EditorStyles.miniButton)
+            {
+                fixedWidth = 70,
+                fixedHeight = 22
+            };
+
+            languageButtonActiveStyle = new GUIStyle(EditorStyles.miniButton)
+            {
+                fixedWidth = 70,
+                fixedHeight = 22,
+                fontStyle = FontStyle.Bold
+            };
+
+            stylesInitialized = true;
+        }
+
+        private void LoadCurrentSettings()
+        {
+            EditorBackgroundSettings.Load();
+            enabled = EditorBackgroundSettings.Enabled;
+            opacity = EditorBackgroundSettings.Opacity;
+            scaleMode = EditorBackgroundSettings.ScaleMode;
+            tileScale = EditorBackgroundSettings.TileScale;
+            tintColor = EditorBackgroundSettings.TintColor;
+            globalMode = EditorBackgroundSettings.GlobalMode;
+            overlayEnabled = EditorBackgroundSettings.OverlayEnabled;
+            overlayColor = EditorBackgroundSettings.OverlayColor;
+            borderEnabled = EditorBackgroundSettings.BorderEnabled;
+            borderColor = EditorBackgroundSettings.BorderColor;
+            borderWidth = EditorBackgroundSettings.BorderWidth;
+
+            if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
+            {
+                selectedTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(EditorBackgroundSettings.ImagePath);
+            }
+            else
+            {
+                selectedTexture = null;
+            }
+        }
+
+        private void OnGUI()
+        {
+            InitStyles();
+
+            // ウィンドウタイトルを更新
+            titleContent = new GUIContent(Localization.WindowTitle);
+
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
+            EditorGUILayout.Space(12);
+
+            // ヘッダー部分（タイトル + 言語切り替え）
+            DrawHeader();
+
+            EditorGUILayout.Space(8);
+
+            // メイン有効化トグル
+            DrawMainToggle();
+
+            EditorGUILayout.Space(12);
+
+            // 背景画像セクション
+            DrawBackgroundImageSection();
+
+            EditorGUILayout.Space(8);
+
+            // カラーオーバーレイセクション
+            DrawOverlaySection();
+
+            EditorGUILayout.Space(8);
+
+            // ボーダーセクション
+            DrawBorderSection();
+
+            EditorGUILayout.Space(16);
+
+            // リセットボタン
+            DrawResetButton();
+
+            // 画像プレビュー情報
+            if (selectedTexture != null)
+            {
+                EditorGUILayout.Space(12);
+                DrawImageInfo();
+            }
+
+            EditorGUILayout.Space(12);
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawHeader()
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            // タイトル
+            EditorGUILayout.LabelField(Localization.MainTitle, headerStyle);
+
+            GUILayout.FlexibleSpace();
+
+            // 言語切り替えボタン
+            var isJapanese = EditorBackgroundSettings.CurrentLanguage == EditorBackgroundSettings.Language.Japanese;
+
+            if (GUILayout.Button(Localization.LanguageJapanese,
+                isJapanese ? languageButtonActiveStyle : languageButtonStyle))
+            {
+                EditorBackgroundSettings.CurrentLanguage = EditorBackgroundSettings.Language.Japanese;
+                Repaint();
+            }
+
+            if (GUILayout.Button(Localization.LanguageEnglish,
+                !isJapanese ? languageButtonActiveStyle : languageButtonStyle))
+            {
+                EditorBackgroundSettings.CurrentLanguage = EditorBackgroundSettings.Language.English;
+                Repaint();
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawMainToggle()
+        {
+            EditorGUILayout.BeginVertical(sectionBoxStyle);
+
+            var newEnabled = EditorGUILayout.ToggleLeft(Localization.EnableBackground, enabled, EditorStyles.boldLabel);
+            if (newEnabled != enabled)
+            {
+                enabled = newEnabled;
+                EditorBackgroundSettings.Enabled = enabled;
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawBackgroundImageSection()
+        {
+            EditorGUILayout.BeginVertical(sectionBoxStyle);
+
+            EditorGUILayout.LabelField(Localization.BackgroundImageSection, EditorStyles.boldLabel);
+            EditorGUILayout.Space(6);
+
+            // 画像選択
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(Localization.Image);
+            var newTexture = (Texture2D)EditorGUILayout.ObjectField(selectedTexture, typeof(Texture2D), false);
+
+            using (new EditorGUI.DisabledGroupScope(selectedTexture == null))
+            {
+                if (GUILayout.Button(Localization.ClearImage, GUILayout.Width(50)))
+                {
+                    newTexture = null;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (newTexture != selectedTexture)
+            {
+                selectedTexture = newTexture;
+                EditorBackgroundSettings.ImagePath = selectedTexture != null
+                    ? AssetDatabase.GetAssetPath(selectedTexture)
+                    : "";
+            }
+
+            EditorGUILayout.Space(4);
+
+            // 不透明度
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(new GUIContent(Localization.Opacity, Localization.OpacityTooltip));
+            var newOpacity = EditorGUILayout.Slider(opacity, 0f, 1f);
+            EditorGUILayout.EndHorizontal();
+
+            if (!Mathf.Approximately(newOpacity, opacity))
+            {
+                opacity = newOpacity;
+                EditorBackgroundSettings.Opacity = opacity;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // スケールモード
+            var newScaleMode = (BackgroundScaleMode)EditorGUILayout.EnumPopup(
+                new GUIContent(Localization.ScaleMode, Localization.ScaleModeTooltip),
+                scaleMode);
+            if (newScaleMode != scaleMode)
+            {
+                scaleMode = newScaleMode;
+                EditorBackgroundSettings.ScaleMode = scaleMode;
+            }
+
+            // タイル倍率（タイルモードのときのみ表示）
+            if (scaleMode == BackgroundScaleMode.Tile)
+            {
+                EditorGUILayout.Space(4);
+
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.TileScale, Localization.TileScaleTooltip));
+                var newTileScale = EditorGUILayout.Slider(tileScale, 0.1f, 5f);
+                EditorGUILayout.EndHorizontal();
+
+                if (!Mathf.Approximately(newTileScale, tileScale))
+                {
+                    tileScale = newTileScale;
+                    EditorBackgroundSettings.TileScale = tileScale;
+                }
+            }
+
+            EditorGUILayout.Space(4);
+
+            // 色調
+            var newTintColor = EditorGUILayout.ColorField(
+                new GUIContent(Localization.TintColor, Localization.TintColorTooltip),
+                tintColor);
+            if (newTintColor != tintColor)
+            {
+                tintColor = newTintColor;
+                EditorBackgroundSettings.TintColor = tintColor;
+            }
+
+            EditorGUILayout.Space(4);
+
+            // グローバルモード
+            var newGlobalMode = EditorGUILayout.Toggle(
+                new GUIContent(Localization.GlobalMode, Localization.GlobalModeTooltip),
+                globalMode);
+            if (newGlobalMode != globalMode)
+            {
+                globalMode = newGlobalMode;
+                EditorBackgroundSettings.GlobalMode = globalMode;
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawOverlaySection()
+        {
+            EditorGUILayout.BeginVertical(sectionBoxStyle);
+
+            EditorGUILayout.LabelField(Localization.ColorOverlaySection, EditorStyles.boldLabel);
+            EditorGUILayout.Space(6);
+
+            // オーバーレイ有効化
+            var newOverlayEnabled = EditorGUILayout.Toggle(
+                new GUIContent(Localization.EnableOverlay, Localization.EnableOverlayTooltip),
+                overlayEnabled);
+            if (newOverlayEnabled != overlayEnabled)
+            {
+                overlayEnabled = newOverlayEnabled;
+                EditorBackgroundSettings.OverlayEnabled = overlayEnabled;
+            }
+
+            using (new EditorGUI.DisabledGroupScope(!overlayEnabled))
+            {
+                EditorGUILayout.Space(4);
+
+                // オーバーレイカラー
+                var newOverlayColor = EditorGUILayout.ColorField(
+                    new GUIContent(Localization.OverlayColor, Localization.OverlayColorTooltip),
+                    overlayColor, true, true, false);
+                if (newOverlayColor != overlayColor)
+                {
+                    overlayColor = newOverlayColor;
+                    EditorBackgroundSettings.OverlayColor = overlayColor;
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawBorderSection()
+        {
+            EditorGUILayout.BeginVertical(sectionBoxStyle);
+
+            EditorGUILayout.LabelField(Localization.BorderSection, EditorStyles.boldLabel);
+            EditorGUILayout.Space(6);
+
+            // ボーダー有効化
+            var newBorderEnabled = EditorGUILayout.Toggle(
+                new GUIContent(Localization.EnableBorder, Localization.EnableBorderTooltip),
+                borderEnabled);
+            if (newBorderEnabled != borderEnabled)
+            {
+                borderEnabled = newBorderEnabled;
+                EditorBackgroundSettings.BorderEnabled = borderEnabled;
+            }
+
+            using (new EditorGUI.DisabledGroupScope(!borderEnabled))
+            {
+                EditorGUILayout.Space(4);
+
+                // ボーダーカラー
+                var newBorderColor = EditorGUILayout.ColorField(
+                    new GUIContent(Localization.BorderColor, Localization.BorderColorTooltip),
+                    borderColor, true, true, false);
+                if (newBorderColor != borderColor)
+                {
+                    borderColor = newBorderColor;
+                    EditorBackgroundSettings.BorderColor = borderColor;
+                }
+
+                EditorGUILayout.Space(4);
+
+                // ボーダー幅
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.BorderWidth, Localization.BorderWidthTooltip));
+                var newBorderWidth = EditorGUILayout.Slider(borderWidth, 1f, 10f);
+                EditorGUILayout.EndHorizontal();
+
+                if (!Mathf.Approximately(newBorderWidth, borderWidth))
+                {
+                    borderWidth = newBorderWidth;
+                    EditorBackgroundSettings.BorderWidth = borderWidth;
+                }
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawResetButton()
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(Localization.ResetToDefault, GUILayout.Width(140), GUILayout.Height(28)))
+            {
+                if (EditorUtility.DisplayDialog(
+                    Localization.ResetConfirmTitle,
+                    Localization.ResetConfirmMessage,
+                    Localization.Yes,
+                    Localization.No))
+                {
+                    EditorBackgroundSettings.ResetToDefault();
+                    LoadCurrentSettings();
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawImageInfo()
+        {
+            EditorGUILayout.BeginVertical(sectionBoxStyle);
+
+            EditorGUILayout.LabelField(Localization.ImageInfo, EditorStyles.boldLabel);
+            EditorGUILayout.Space(4);
+
+            EditorGUILayout.LabelField($"{Localization.ImageName}: {selectedTexture.name}");
+            EditorGUILayout.LabelField($"{Localization.ImageSize}: {selectedTexture.width} x {selectedTexture.height}");
+
+            EditorGUILayout.EndVertical();
+        }
+    }
+}

@@ -5,6 +5,17 @@ using UnityEngine;
 namespace EditorBackground
 {
     /// <summary>
+    /// 背景のスケールモード
+    /// </summary>
+    public enum BackgroundScaleMode
+    {
+        ScaleAndCrop,   // 画面を覆うようにスケール（はみ出し部分はクリップ）
+        ScaleToFit,     // 画面に収まるようにスケール（余白あり）
+        StretchToFill,  // 画面に合わせて引き伸ばし
+        Tile            // タイル状に繰り返し
+    }
+
+    /// <summary>
     /// 設定データを管理する静的クラス
     /// </summary>
     public static class EditorBackgroundSettings
@@ -20,11 +31,16 @@ namespace EditorBackground
         private const string KEY_BORDER_ENABLED = "EditorBackground_BorderEnabled";
         private const string KEY_BORDER_COLOR = "EditorBackground_BorderColor";
         private const string KEY_BORDER_WIDTH = "EditorBackground_BorderWidth";
+        private const string KEY_LANGUAGE = "EditorBackground_Language";
+        private const string KEY_TILE_SCALE = "EditorBackground_TileScale";
+
+        public enum Language { Japanese, English }
 
         private static bool _enabled = true;
         private static string _imagePath = "";
         private static float _opacity = 0.08f;
-        private static ScaleMode _scaleMode = ScaleMode.ScaleAndCrop;
+        private static BackgroundScaleMode _scaleMode = BackgroundScaleMode.ScaleAndCrop;
+        private static float _tileScale = 1f;
         private static Color _tintColor = Color.white;
         private static bool _globalMode = true;
         private static bool _overlayEnabled = false;
@@ -32,6 +48,7 @@ namespace EditorBackground
         private static bool _borderEnabled = false;
         private static Color _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
         private static float _borderWidth = 2f;
+        private static Language _language = Language.Japanese;
 
         public static event Action OnSettingsChanged;
 
@@ -78,7 +95,7 @@ namespace EditorBackground
             }
         }
 
-        public static ScaleMode ScaleMode
+        public static BackgroundScaleMode ScaleMode
         {
             get => _scaleMode;
             set
@@ -86,6 +103,21 @@ namespace EditorBackground
                 if (_scaleMode != value)
                 {
                     _scaleMode = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static float TileScale
+        {
+            get => _tileScale;
+            set
+            {
+                value = Mathf.Clamp(value, 0.1f, 5f);
+                if (!Mathf.Approximately(_tileScale, value))
+                {
+                    _tileScale = value;
                     Save();
                     NotifySettingsChanged();
                 }
@@ -191,6 +223,19 @@ namespace EditorBackground
             }
         }
 
+        public static Language CurrentLanguage
+        {
+            get => _language;
+            set
+            {
+                if (_language != value)
+                {
+                    _language = value;
+                    Save();
+                }
+            }
+        }
+
         public static Texture2D GetTexture()
         {
             if (string.IsNullOrEmpty(_imagePath))
@@ -210,6 +255,7 @@ namespace EditorBackground
             EditorPrefs.SetString(KEY_IMAGE_PATH, _imagePath);
             EditorPrefs.SetFloat(KEY_OPACITY, _opacity);
             EditorPrefs.SetInt(KEY_SCALE_MODE, (int)_scaleMode);
+            EditorPrefs.SetFloat(KEY_TILE_SCALE, _tileScale);
             EditorPrefs.SetString(KEY_TINT_COLOR, ColorUtility.ToHtmlStringRGBA(_tintColor));
             EditorPrefs.SetBool(KEY_GLOBAL_MODE, _globalMode);
             EditorPrefs.SetBool(KEY_OVERLAY_ENABLED, _overlayEnabled);
@@ -217,6 +263,7 @@ namespace EditorBackground
             EditorPrefs.SetBool(KEY_BORDER_ENABLED, _borderEnabled);
             EditorPrefs.SetString(KEY_BORDER_COLOR, ColorUtility.ToHtmlStringRGBA(_borderColor));
             EditorPrefs.SetFloat(KEY_BORDER_WIDTH, _borderWidth);
+            EditorPrefs.SetInt(KEY_LANGUAGE, (int)_language);
         }
 
         public static void Load()
@@ -224,11 +271,13 @@ namespace EditorBackground
             _enabled = EditorPrefs.GetBool(KEY_ENABLED, true);
             _imagePath = EditorPrefs.GetString(KEY_IMAGE_PATH, "");
             _opacity = EditorPrefs.GetFloat(KEY_OPACITY, 0.08f);
-            _scaleMode = (ScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)ScaleMode.ScaleAndCrop);
+            _scaleMode = (BackgroundScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)BackgroundScaleMode.ScaleAndCrop);
+            _tileScale = EditorPrefs.GetFloat(KEY_TILE_SCALE, 1f);
             _globalMode = EditorPrefs.GetBool(KEY_GLOBAL_MODE, true);
             _overlayEnabled = EditorPrefs.GetBool(KEY_OVERLAY_ENABLED, false);
             _borderEnabled = EditorPrefs.GetBool(KEY_BORDER_ENABLED, false);
             _borderWidth = EditorPrefs.GetFloat(KEY_BORDER_WIDTH, 2f);
+            _language = (Language)EditorPrefs.GetInt(KEY_LANGUAGE, (int)Language.Japanese);
 
             _tintColor = LoadColor(KEY_TINT_COLOR, Color.white);
             _overlayColor = LoadColor(KEY_OVERLAY_COLOR, new Color(0.2f, 0.4f, 0.8f, 0.1f));
@@ -250,7 +299,8 @@ namespace EditorBackground
             _enabled = true;
             _imagePath = "";
             _opacity = 0.08f;
-            _scaleMode = ScaleMode.ScaleAndCrop;
+            _scaleMode = BackgroundScaleMode.ScaleAndCrop;
+            _tileScale = 1f;
             _tintColor = Color.white;
             _globalMode = true;
             _overlayEnabled = false;
@@ -258,6 +308,7 @@ namespace EditorBackground
             _borderEnabled = false;
             _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
             _borderWidth = 2f;
+            _language = Language.Japanese;
             Save();
             NotifySettingsChanged();
         }

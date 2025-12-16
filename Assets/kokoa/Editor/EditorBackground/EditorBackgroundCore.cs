@@ -192,14 +192,13 @@ namespace EditorBackground
             innerBg.name = "editor-background-inner";
             innerBg.style.position = Position.Absolute;
             innerBg.style.backgroundImage = texture;
-            innerBg.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
             // TintColorのアルファ値にOpacityを乗算して適用
             var tintWithOpacity = EditorBackgroundSettings.TintColor;
             tintWithOpacity.a *= EditorBackgroundSettings.Opacity;
             innerBg.style.unityBackgroundImageTintColor = tintWithOpacity;
             innerBg.pickingMode = PickingMode.Ignore;
 
-            ApplyBackgroundSize(innerBg, EditorBackgroundSettings.ScaleMode);
+            ApplyBackgroundSize(innerBg, EditorBackgroundSettings.ScaleMode, texture);
             UpdateInnerBackgroundTransform(window, innerBg);
 
             bg.Add(innerBg);
@@ -219,14 +218,13 @@ namespace EditorBackground
             bg.style.right = 0;
             bg.style.bottom = 0;
             bg.style.backgroundImage = texture;
-            bg.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
             // TintColorのアルファ値にOpacityを乗算して適用
             var tintWithOpacity = EditorBackgroundSettings.TintColor;
             tintWithOpacity.a *= EditorBackgroundSettings.Opacity;
             bg.style.unityBackgroundImageTintColor = tintWithOpacity;
             bg.pickingMode = PickingMode.Ignore;
 
-            ApplyBackgroundSize(bg, EditorBackgroundSettings.ScaleMode);
+            ApplyBackgroundSize(bg, EditorBackgroundSettings.ScaleMode, texture);
 
             return bg;
         }
@@ -307,21 +305,35 @@ namespace EditorBackground
             UpdateInnerBackgroundTransform(window, innerBg);
         }
 
-        private static void ApplyBackgroundSize(VisualElement element, ScaleMode scaleMode)
+        private static void ApplyBackgroundSize(VisualElement element, BackgroundScaleMode scaleMode, Texture2D texture = null)
         {
             switch (scaleMode)
             {
-                case ScaleMode.ScaleAndCrop:
+                case BackgroundScaleMode.ScaleAndCrop:
                     element.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
                     break;
-                case ScaleMode.ScaleToFit:
+                case BackgroundScaleMode.ScaleToFit:
                     element.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
                     break;
-                case ScaleMode.StretchToFill:
+                case BackgroundScaleMode.StretchToFill:
                     element.style.backgroundSize = new BackgroundSize(Length.Percent(100), Length.Percent(100));
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+                    break;
+                case BackgroundScaleMode.Tile:
+                    if (texture != null)
+                    {
+                        float scale = EditorBackgroundSettings.TileScale;
+                        float width = texture.width * scale;
+                        float height = texture.height * scale;
+                        element.style.backgroundSize = new BackgroundSize(width, height);
+                    }
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.Repeat, Repeat.Repeat);
                     break;
                 default:
                     element.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Cover);
+                    element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
                     break;
             }
         }
