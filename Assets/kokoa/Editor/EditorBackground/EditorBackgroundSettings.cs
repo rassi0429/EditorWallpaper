@@ -292,7 +292,7 @@ namespace EditorBackground
 
             if (texture == null)
             {
-                Debug.LogWarning($"[EditorBackground] Image not found: {_imagePath}");
+                // Debug.LogWarning($"[EditorBackground] Image not found: {_imagePath}");
                 return null;
             }
 

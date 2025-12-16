@@ -327,11 +327,11 @@ namespace EditorBackground
                         float scale = EditorBackgroundSettings.TileScale;
                         float w = texture.width * scale;
                         float h = texture.height * scale;
-                        Debug.Log($"[EditorBackground] Tile - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
+                        // Debug.Log($"[EditorBackground] Tile - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
                         var widthLen = new Length(w, LengthUnit.Pixel);
                         var heightLen = new Length(h, LengthUnit.Pixel);
                         element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
-                        Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
+                        // Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
                     }
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.Repeat, Repeat.Repeat);
                     break;
@@ -341,11 +341,11 @@ namespace EditorBackground
                         float scale = EditorBackgroundSettings.TileScale;
                         float w = texture.width * scale;
                         float h = texture.height * scale;
-                        Debug.Log($"[EditorBackground] Corner - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
+                        // Debug.Log($"[EditorBackground] Corner - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
                         var widthLen = new Length(w, LengthUnit.Pixel);
                         var heightLen = new Length(h, LengthUnit.Pixel);
                         element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
-                        Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
+                        // Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
                     }
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
                     ApplyCornerPosition(element, EditorBackgroundSettings.CornerPosition);
