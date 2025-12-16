@@ -112,8 +112,11 @@ namespace EditorBackground
             if (window == null || window.rootVisualElement == null)
                 return;
 
-            // 設定ウィンドウ自体には適用しない（UIが操作できなくなるため）
-            if (window.GetType().Name == "EditorBackgroundWindow")
+            // 特定のウィンドウには適用しない
+            var typeName = window.GetType().Name;
+            if (typeName == "EditorBackgroundWindow" ||  // 設定ウィンドウ
+                typeName == "SceneView" ||               // Sceneビュー
+                typeName == "GameView")                  // Gameビュー
                 return;
 
             // 背景画像
@@ -327,11 +330,17 @@ namespace EditorBackground
                         float scale = EditorBackgroundSettings.TileScale;
                         float w = texture.width * scale;
                         float h = texture.height * scale;
-                        // Debug.Log($"[EditorBackground] Tile - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
+                        // 頂点数オーバーフロー防止: 最小16pxを保証
+                        const float minTileSize = 16f;
+                        if (w < minTileSize || h < minTileSize)
+                        {
+                            float ratio = Mathf.Max(minTileSize / w, minTileSize / h);
+                            w *= ratio;
+                            h *= ratio;
+                        }
                         var widthLen = new Length(w, LengthUnit.Pixel);
                         var heightLen = new Length(h, LengthUnit.Pixel);
                         element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
-                        // Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
                     }
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.Repeat, Repeat.Repeat);
                     break;
@@ -341,11 +350,9 @@ namespace EditorBackground
                         float scale = EditorBackgroundSettings.TileScale;
                         float w = texture.width * scale;
                         float h = texture.height * scale;
-                        // Debug.Log($"[EditorBackground] Corner - Texture: {texture.width}x{texture.height}, Scale: {scale}, Result: {w}x{h}, Aspect: {(float)texture.width / texture.height}");
                         var widthLen = new Length(w, LengthUnit.Pixel);
                         var heightLen = new Length(h, LengthUnit.Pixel);
                         element.style.backgroundSize = new BackgroundSize(widthLen, heightLen);
-                        // Debug.Log($"[EditorBackground] BackgroundSize set: {element.style.backgroundSize}");
                     }
                     element.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
                     ApplyCornerPosition(element, EditorBackgroundSettings.CornerPosition);
