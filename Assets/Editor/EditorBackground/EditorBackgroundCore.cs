@@ -112,6 +112,10 @@ namespace EditorBackground
             if (window == null || window.rootVisualElement == null)
                 return;
 
+            // 設定ウィンドウ自体には適用しない（UIが操作できなくなるため）
+            if (window.GetType().Name == "EditorBackgroundWindow")
+                return;
+
             // 背景画像
             var texture = EditorBackgroundSettings.GetTexture();
             if (texture != null)
@@ -189,8 +193,10 @@ namespace EditorBackground
             innerBg.style.position = Position.Absolute;
             innerBg.style.backgroundImage = texture;
             innerBg.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
-            innerBg.style.opacity = EditorBackgroundSettings.Opacity;
-            innerBg.style.unityBackgroundImageTintColor = EditorBackgroundSettings.TintColor;
+            // TintColorのアルファ値にOpacityを乗算して適用
+            var tintWithOpacity = EditorBackgroundSettings.TintColor;
+            tintWithOpacity.a *= EditorBackgroundSettings.Opacity;
+            innerBg.style.unityBackgroundImageTintColor = tintWithOpacity;
             innerBg.pickingMode = PickingMode.Ignore;
 
             ApplyBackgroundSize(innerBg, EditorBackgroundSettings.ScaleMode);
@@ -214,8 +220,10 @@ namespace EditorBackground
             bg.style.bottom = 0;
             bg.style.backgroundImage = texture;
             bg.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
-            bg.style.opacity = EditorBackgroundSettings.Opacity;
-            bg.style.unityBackgroundImageTintColor = EditorBackgroundSettings.TintColor;
+            // TintColorのアルファ値にOpacityを乗算して適用
+            var tintWithOpacity = EditorBackgroundSettings.TintColor;
+            tintWithOpacity.a *= EditorBackgroundSettings.Opacity;
+            bg.style.unityBackgroundImageTintColor = tintWithOpacity;
             bg.pickingMode = PickingMode.Ignore;
 
             ApplyBackgroundSize(bg, EditorBackgroundSettings.ScaleMode);
