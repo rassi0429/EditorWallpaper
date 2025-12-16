@@ -14,12 +14,14 @@ namespace EditorBackground
         private const string KEY_OPACITY = "EditorBackground_Opacity";
         private const string KEY_SCALE_MODE = "EditorBackground_ScaleMode";
         private const string KEY_TINT_COLOR = "EditorBackground_TintColor";
+        private const string KEY_GLOBAL_MODE = "EditorBackground_GlobalMode";
 
         private static bool _enabled = true;
         private static string _imagePath = "";
         private static float _opacity = 0.08f;
         private static ScaleMode _scaleMode = ScaleMode.ScaleAndCrop;
         private static Color _tintColor = Color.white;
+        private static bool _globalMode = true;
 
         public static event Action OnSettingsChanged;
 
@@ -94,6 +96,20 @@ namespace EditorBackground
             }
         }
 
+        public static bool GlobalMode
+        {
+            get => _globalMode;
+            set
+            {
+                if (_globalMode != value)
+                {
+                    _globalMode = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
         public static Texture2D GetTexture()
         {
             if (string.IsNullOrEmpty(_imagePath))
@@ -114,6 +130,7 @@ namespace EditorBackground
             EditorPrefs.SetFloat(KEY_OPACITY, _opacity);
             EditorPrefs.SetInt(KEY_SCALE_MODE, (int)_scaleMode);
             EditorPrefs.SetString(KEY_TINT_COLOR, ColorUtility.ToHtmlStringRGBA(_tintColor));
+            EditorPrefs.SetBool(KEY_GLOBAL_MODE, _globalMode);
         }
 
         public static void Load()
@@ -122,6 +139,7 @@ namespace EditorBackground
             _imagePath = EditorPrefs.GetString(KEY_IMAGE_PATH, "");
             _opacity = EditorPrefs.GetFloat(KEY_OPACITY, 0.08f);
             _scaleMode = (ScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)ScaleMode.ScaleAndCrop);
+            _globalMode = EditorPrefs.GetBool(KEY_GLOBAL_MODE, true);
 
             var colorString = EditorPrefs.GetString(KEY_TINT_COLOR, "FFFFFFFF");
             if (ColorUtility.TryParseHtmlString("#" + colorString, out var color))
@@ -141,6 +159,7 @@ namespace EditorBackground
             _opacity = 0.08f;
             _scaleMode = ScaleMode.ScaleAndCrop;
             _tintColor = Color.white;
+            _globalMode = true;
             Save();
             NotifySettingsChanged();
         }

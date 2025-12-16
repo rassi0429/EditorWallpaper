@@ -13,12 +13,13 @@ namespace EditorBackground
         private float opacity;
         private ScaleMode scaleMode;
         private Color tintColor;
+        private bool globalMode;
 
         [MenuItem("Tools/Editor Background/Settings")]
         public static void ShowWindow()
         {
             var window = GetWindow<EditorBackgroundWindow>("Editor Background");
-            window.minSize = new Vector2(350, 280);
+            window.minSize = new Vector2(350, 340);
             window.LoadCurrentSettings();
         }
 
@@ -34,6 +35,7 @@ namespace EditorBackground
             opacity = EditorBackgroundSettings.Opacity;
             scaleMode = EditorBackgroundSettings.ScaleMode;
             tintColor = EditorBackgroundSettings.TintColor;
+            globalMode = EditorBackgroundSettings.GlobalMode;
 
             if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
             {
@@ -115,6 +117,20 @@ namespace EditorBackground
             {
                 tintColor = newTintColor;
                 EditorBackgroundSettings.TintColor = tintColor;
+            }
+
+            EditorGUILayout.Space(15);
+            DrawSeparator();
+            EditorGUILayout.Space(10);
+
+            // Global Mode Toggle
+            var newGlobalMode = EditorGUILayout.Toggle(
+                new GUIContent("Global Mode", "ON: 全ウィンドウで1枚の背景を共有\nOFF: 各ウィンドウに個別の背景"),
+                globalMode);
+            if (newGlobalMode != globalMode)
+            {
+                globalMode = newGlobalMode;
+                EditorBackgroundSettings.GlobalMode = globalMode;
             }
 
             EditorGUILayout.Space(20);

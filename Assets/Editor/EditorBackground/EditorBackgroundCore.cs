@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace EditorBackground
 {
     /// <summary>
-    /// 背景描画のコアロジック - グローバル背景対応版
+    /// 背景描画のコアロジック - グローバル/個別モード対応版
     /// </summary>
     [InitializeOnLoad]
     public static class EditorBackgroundCore
@@ -34,8 +34,11 @@ namespace EditorBackground
             if (!EditorBackgroundSettings.Enabled)
                 return;
 
-            // グローバル境界を更新
-            UpdateGlobalBounds();
+            // グローバルモードの場合のみ境界を更新
+            if (EditorBackgroundSettings.GlobalMode)
+            {
+                UpdateGlobalBounds();
+            }
 
             var allWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
             foreach (var window in allWindows)
@@ -48,9 +51,9 @@ namespace EditorBackground
                     ApplyBackground(window);
                     processedWindows.Add(window);
                 }
-                else
+                else if (EditorBackgroundSettings.GlobalMode)
                 {
-                    // ウィンドウ位置が変わった場合に背景位置を更新
+                    // グローバルモードの場合のみ位置更新
                     UpdateBackgroundPosition(window);
                 }
             }
@@ -104,12 +107,24 @@ namespace EditorBackground
 
             RemoveBackground(window);
 
-            var bg = CreateBackgroundElement(window, texture);
+            VisualElement bg;
+            if (EditorBackgroundSettings.GlobalMode)
+            {
+                bg = CreateGlobalBackgroundElement(window, texture);
+            }
+            else
+            {
+                bg = CreateLocalBackgroundElement(texture);
+            }
+
             window.rootVisualElement.Insert(0, bg);
             backgroundElements[window] = bg;
         }
 
-        private static VisualElement CreateBackgroundElement(EditorWindow window, Texture2D texture)
+        /// <summary>
+        /// グローバルモード用の背景要素を作成
+        /// </summary>
+        private static VisualElement CreateGlobalBackgroundElement(EditorWindow window, Texture2D texture)
         {
             var bg = new VisualElement();
             bg.name = BACKGROUND_ELEMENT_NAME;
@@ -135,6 +150,29 @@ namespace EditorBackground
             UpdateInnerBackgroundTransform(window, innerBg);
 
             bg.Add(innerBg);
+            return bg;
+        }
+
+        /// <summary>
+        /// 個別モード用の背景要素を作成（従来の方式）
+        /// </summary>
+        private static VisualElement CreateLocalBackgroundElement(Texture2D texture)
+        {
+            var bg = new VisualElement();
+            bg.name = BACKGROUND_ELEMENT_NAME;
+            bg.style.position = Position.Absolute;
+            bg.style.left = 0;
+            bg.style.top = 0;
+            bg.style.right = 0;
+            bg.style.bottom = 0;
+            bg.style.backgroundImage = texture;
+            bg.style.backgroundRepeat = new BackgroundRepeat(Repeat.NoRepeat, Repeat.NoRepeat);
+            bg.style.opacity = EditorBackgroundSettings.Opacity;
+            bg.style.unityBackgroundImageTintColor = EditorBackgroundSettings.TintColor;
+            bg.pickingMode = PickingMode.Ignore;
+
+            ApplyBackgroundSize(bg, EditorBackgroundSettings.ScaleMode);
+
             return bg;
         }
 
@@ -226,7 +264,11 @@ namespace EditorBackground
 
             if (texture != null)
             {
-                UpdateGlobalBounds();
+                if (EditorBackgroundSettings.GlobalMode)
+                {
+                    UpdateGlobalBounds();
+                }
+
                 var allWindows = Resources.FindObjectsOfTypeAll<EditorWindow>();
                 foreach (var window in allWindows)
                 {
