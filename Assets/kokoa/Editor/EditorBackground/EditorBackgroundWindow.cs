@@ -268,7 +268,7 @@ namespace EditorBackground
 
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.PrefixLabel(new GUIContent(Localization.TileScale, Localization.TileScaleTooltip));
-                var newTileScale = EditorGUILayout.Slider(tileScale, 0.1f, 5f);
+                var newTileScale = EditorGUILayout.Slider(tileScale, 0.01f, 5f);
                 EditorGUILayout.EndHorizontal();
 
                 if (!Mathf.Approximately(newTileScale, tileScale))

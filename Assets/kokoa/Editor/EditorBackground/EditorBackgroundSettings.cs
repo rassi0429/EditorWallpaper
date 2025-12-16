@@ -132,7 +132,7 @@ namespace EditorBackground
             get => _tileScale;
             set
             {
-                value = Mathf.Clamp(value, 0.1f, 5f);
+                value = Mathf.Clamp(value, 0.01f, 5f);
                 if (!Mathf.Approximately(_tileScale, value))
                 {
                     _tileScale = value;

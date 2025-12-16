@@ -37,8 +37,8 @@ namespace EditorBackground
             : "ScaleAndCrop: Scale to cover\nScaleToFit: Scale to fit\nStretchToFill: Stretch to fill\nTile: Repeat as tiles\nCorner: Single image at corner";
         public static string TileScale => IsJapanese ? "画像倍率" : "Image Scale";
         public static string TileScaleTooltip => IsJapanese
-            ? "画像の大きさ (0.1 = 小さく, 1 = 等倍, 5 = 大きく)"
-            : "Image size (0.1 = smaller, 1 = original, 5 = larger)";
+            ? "画像の大きさ (0.01 = 小さく, 1 = 等倍, 5 = 大きく)"
+            : "Image size (0.01 = smaller, 1 = original, 5 = larger)";
         public static string CornerPosition => IsJapanese ? "配置位置" : "Position";
         public static string CornerPositionTooltip => IsJapanese
             ? "画像を配置する角の位置"
