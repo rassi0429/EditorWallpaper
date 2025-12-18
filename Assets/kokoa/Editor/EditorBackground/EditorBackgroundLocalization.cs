@@ -33,8 +33,8 @@ namespace EditorBackground
             : "Background image opacity (0 = transparent, 1 = opaque)";
         public static string ScaleMode => IsJapanese ? "スケールモード" : "Scale Mode";
         public static string ScaleModeTooltip => IsJapanese
-            ? "ScaleAndCrop: 画面を覆うようにスケール\nScaleToFit: 画面に収まるようにスケール\nStretchToFill: 画面に合わせて引き伸ばし\nTile: タイル状に繰り返し\nCorner: 角基準で1枚配置"
-            : "ScaleAndCrop: Scale to cover\nScaleToFit: Scale to fit\nStretchToFill: Stretch to fill\nTile: Repeat as tiles\nCorner: Single image at corner";
+            ? "拡大してクロップ: 画面を覆うようにスケール\n収まるように縮小: 画面に収まるようにスケール\n引き伸ばし: 画面に合わせて引き伸ばし\nタイル: タイル状に繰り返し\n角に配置: 角基準で1枚配置"
+            : "Scale and Crop: Scale to cover\nScale to Fit: Scale to fit\nStretch to Fill: Stretch to fill\nTile: Repeat as tiles\nCorner: Single image at corner";
         public static string TileScale => IsJapanese ? "画像倍率" : "Image Scale";
         public static string TileScaleTooltip => IsJapanese
             ? "画像の大きさ (0.01 = 小さく, 1 = 等倍, 5 = 大きく)"
@@ -46,13 +46,21 @@ namespace EditorBackground
 
         // スケールモード選択肢
         public static string[] ScaleModeOptions => IsJapanese
-            ? new[] { "拡大してクロップ", "収まるように縮小", "引き伸ばし", "タイル", "コーナー配置" }
+            ? new[] { "拡大してクロップ", "収まるように縮小", "引き伸ばし", "タイル", "角に配置" }
             : new[] { "Scale and Crop", "Scale to Fit", "Stretch to Fill", "Tile", "Corner" };
 
         // コーナー位置選択肢
         public static string[] CornerPositionOptions => IsJapanese
             ? new[] { "左上", "右上", "左下", "右下" }
             : new[] { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
+
+        // オフセット
+        public static string OffsetX => IsJapanese ? "X オフセット" : "X Offset";
+        public static string OffsetY => IsJapanese ? "Y オフセット" : "Y Offset";
+        public static string OffsetTooltip => IsJapanese
+            ? "画像の位置を微調整 (-500 〜 500)"
+            : "Fine-tune image position (-500 to 500)";
+
         public static string TintColor => IsJapanese ? "色調" : "Tint Color";
         public static string TintColorTooltip => IsJapanese
             ? "背景画像に適用する色調"

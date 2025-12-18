@@ -37,6 +37,8 @@ namespace EditorBackground
         public int scaleMode = 0;
         public float tileScale = 1f;
         public int cornerPosition = 3;
+        public float offsetX = 0f;
+        public float offsetY = 0f;
         public string tintColor = "FFFFFFFF";
         public bool globalMode = true;
         public bool overlayEnabled = false;
@@ -62,6 +64,8 @@ namespace EditorBackground
         private static BackgroundScaleMode _scaleMode = BackgroundScaleMode.ScaleAndCrop;
         private static float _tileScale = 1f;
         private static CornerPosition _cornerPosition = CornerPosition.BottomRight;
+        private static float _offsetX = 0f;
+        private static float _offsetY = 0f;
         private static Color _tintColor = Color.white;
         private static bool _globalMode = true;
         private static bool _overlayEnabled = false;
@@ -159,6 +163,36 @@ namespace EditorBackground
                 if (_cornerPosition != value)
                 {
                     _cornerPosition = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static float OffsetX
+        {
+            get => _offsetX;
+            set
+            {
+                value = Mathf.Clamp(value, -500f, 500f);
+                if (!Mathf.Approximately(_offsetX, value))
+                {
+                    _offsetX = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static float OffsetY
+        {
+            get => _offsetY;
+            set
+            {
+                value = Mathf.Clamp(value, -500f, 500f);
+                if (!Mathf.Approximately(_offsetY, value))
+                {
+                    _offsetY = value;
                     Save();
                     NotifySettingsChanged();
                 }
@@ -369,6 +403,8 @@ namespace EditorBackground
                     scaleMode = (int)_scaleMode,
                     tileScale = _tileScale,
                     cornerPosition = (int)_cornerPosition,
+                    offsetX = _offsetX,
+                    offsetY = _offsetY,
                     tintColor = ColorUtility.ToHtmlStringRGBA(_tintColor),
                     globalMode = _globalMode,
                     overlayEnabled = _overlayEnabled,
@@ -403,6 +439,8 @@ namespace EditorBackground
                     _scaleMode = (BackgroundScaleMode)data.scaleMode;
                     _tileScale = data.tileScale;
                     _cornerPosition = (CornerPosition)data.cornerPosition;
+                    _offsetX = data.offsetX;
+                    _offsetY = data.offsetY;
                     _globalMode = data.globalMode;
                     _overlayEnabled = data.overlayEnabled;
                     _borderEnabled = data.borderEnabled;
@@ -433,6 +471,8 @@ namespace EditorBackground
             _scaleMode = BackgroundScaleMode.ScaleAndCrop;
             _tileScale = 1f;
             _cornerPosition = CornerPosition.BottomRight;
+            _offsetX = 0f;
+            _offsetY = 0f;
             _tintColor = Color.white;
             _globalMode = true;
             _overlayEnabled = false;

@@ -15,6 +15,8 @@ namespace EditorBackground
         private BackgroundScaleMode scaleMode;
         private float tileScale;
         private CornerPosition cornerPosition;
+        private float offsetX;
+        private float offsetY;
         private Color tintColor;
         private bool globalMode;
         private bool overlayEnabled;
@@ -86,6 +88,8 @@ namespace EditorBackground
             scaleMode = EditorBackgroundSettings.ScaleMode;
             tileScale = EditorBackgroundSettings.TileScale;
             cornerPosition = EditorBackgroundSettings.CornerPosition;
+            offsetX = EditorBackgroundSettings.OffsetX;
+            offsetY = EditorBackgroundSettings.OffsetY;
             tintColor = EditorBackgroundSettings.TintColor;
             globalMode = EditorBackgroundSettings.GlobalMode;
             overlayEnabled = EditorBackgroundSettings.OverlayEnabled;
@@ -292,6 +296,32 @@ namespace EditorBackground
                 {
                     cornerPosition = (CornerPosition)newCornerPositionIndex;
                     EditorBackgroundSettings.CornerPosition = cornerPosition;
+                }
+
+                EditorGUILayout.Space(4);
+
+                // オフセットX
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.OffsetX, Localization.OffsetTooltip));
+                var newOffsetX = EditorGUILayout.Slider(offsetX, -500f, 500f);
+                EditorGUILayout.EndHorizontal();
+
+                if (!Mathf.Approximately(newOffsetX, offsetX))
+                {
+                    offsetX = newOffsetX;
+                    EditorBackgroundSettings.OffsetX = offsetX;
+                }
+
+                // オフセットY
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.OffsetY, Localization.OffsetTooltip));
+                var newOffsetY = EditorGUILayout.Slider(offsetY, -500f, 500f);
+                EditorGUILayout.EndHorizontal();
+
+                if (!Mathf.Approximately(newOffsetY, offsetY))
+                {
+                    offsetY = newOffsetY;
+                    EditorBackgroundSettings.OffsetY = offsetY;
                 }
             }
 

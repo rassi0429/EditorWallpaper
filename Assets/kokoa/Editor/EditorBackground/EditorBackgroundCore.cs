@@ -366,23 +366,26 @@ namespace EditorBackground
 
         private static void ApplyCornerPosition(VisualElement element, CornerPosition position)
         {
+            float offsetX = EditorBackgroundSettings.OffsetX;
+            float offsetY = EditorBackgroundSettings.OffsetY;
+
             switch (position)
             {
                 case CornerPosition.TopLeft:
-                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left);
-                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top);
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left, offsetX);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top, offsetY);
                     break;
                 case CornerPosition.TopRight:
-                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right);
-                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top);
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right, -offsetX);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Top, offsetY);
                     break;
                 case CornerPosition.BottomLeft:
-                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left);
-                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom);
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Left, offsetX);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom, -offsetY);
                     break;
                 case CornerPosition.BottomRight:
-                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right);
-                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom);
+                    element.style.backgroundPositionX = new BackgroundPosition(BackgroundPositionKeyword.Right, -offsetX);
+                    element.style.backgroundPositionY = new BackgroundPosition(BackgroundPositionKeyword.Bottom, -offsetY);
                     break;
             }
         }
