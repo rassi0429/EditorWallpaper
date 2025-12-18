@@ -455,6 +455,7 @@ namespace EditorBackground
         }
 
         // 前回の設定値をキャッシュ（テクスチャ再読み込みが必要か判定用）
+        private static string _lastImagePath;
         private static ImageSourceMode _lastImageSourceMode;
         private static string _lastImageFolderPath;
         private static bool _lastRandomPerWindow;
@@ -464,12 +465,14 @@ namespace EditorBackground
         {
             // テクスチャの再取得が必要かどうか判定
             bool needsTextureRefresh =
+                _lastImagePath != EditorBackgroundSettings.ImagePath ||
                 _lastImageSourceMode != EditorBackgroundSettings.ImageSourceMode ||
                 _lastImageFolderPath != EditorBackgroundSettings.ImageFolderPath ||
                 _lastRandomPerWindow != EditorBackgroundSettings.RandomPerWindow ||
                 _lastGlobalMode != EditorBackgroundSettings.GlobalMode;
 
             // 設定値を更新
+            _lastImagePath = EditorBackgroundSettings.ImagePath;
             _lastImageSourceMode = EditorBackgroundSettings.ImageSourceMode;
             _lastImageFolderPath = EditorBackgroundSettings.ImageFolderPath;
             _lastRandomPerWindow = EditorBackgroundSettings.RandomPerWindow;
