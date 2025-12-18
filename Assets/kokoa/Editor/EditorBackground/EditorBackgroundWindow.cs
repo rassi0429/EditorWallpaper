@@ -34,10 +34,23 @@ namespace EditorBackground
         private GUIStyle languageButtonActiveStyle;
         private bool stylesInitialized;
 
-        [MenuItem("Tools/Editor Background/Settings")]
+        [MenuItem("Tools/Editor Wallpaper/壁紙を表示 (Show Wallpaper)", false, 0)]
+        public static void ToggleEnable()
+        {
+            EditorBackgroundSettings.Enabled = !EditorBackgroundSettings.Enabled;
+        }
+
+        [MenuItem("Tools/Editor Wallpaper/壁紙を表示 (Show Wallpaper)", true)]
+        public static bool ToggleEnableValidate()
+        {
+            Menu.SetChecked("Tools/Editor Wallpaper/壁紙を表示 (Show Wallpaper)", EditorBackgroundSettings.Enabled);
+            return true;
+        }
+
+        [MenuItem("Tools/Editor Wallpaper/設定 (Settings)", false, 20)]
         public static void ShowWindow()
         {
-            var window = GetWindow<EditorBackgroundWindow>("Editor Background");
+            var window = GetWindow<EditorBackgroundWindow>("Editor Wallpaper");
             window.minSize = new Vector2(380, 500);
             window.LoadCurrentSettings();
         }
@@ -46,6 +59,18 @@ namespace EditorBackground
         {
             LoadCurrentSettings();
             stylesInitialized = false;
+            EditorBackgroundSettings.OnSettingsChanged += OnSettingsChangedExternally;
+        }
+
+        private void OnDisable()
+        {
+            EditorBackgroundSettings.OnSettingsChanged -= OnSettingsChangedExternally;
+        }
+
+        private void OnSettingsChangedExternally()
+        {
+            LoadCurrentSettings();
+            Repaint();
         }
 
         private void InitStyles()
