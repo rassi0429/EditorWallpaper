@@ -1,9 +1,9 @@
 {
     "enabled": true,
-    "imagePath": "C:/Users/neo/Pictures/wallpaper/VRChat_2025-07-12_01-24-39.523_1920x1080.png",
-    "opacity": 0.17800000309944154,
+    "imagePath": "",
+    "opacity": 0.20000000298023225,
     "scaleMode": 0,
-    "tileScale": 0.2800000011920929,
+    "tileScale": 0.3799999952316284,
     "cornerPosition": 3,
     "offsetX": 0.0,
     "offsetY": 0.0,
@@ -16,8 +16,8 @@
     "borderWidth": 2.0,
     "language": 0,
     "imageSourceMode": 0,
-    "imageFolderPath": "C:/Users/neo/Pictures/wallpaper",
+    "imageFolderPath": "",
     "slideshowEnabled": false,
-    "slideshowInterval": 5.0,
-    "randomPerWindow": true
+    "slideshowInterval": 30.0,
+    "randomPerWindow": false
 }

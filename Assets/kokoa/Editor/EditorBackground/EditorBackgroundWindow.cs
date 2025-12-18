@@ -193,14 +193,29 @@ namespace EditorBackground
 
         private void DrawHeader()
         {
+            // ヘッダー背景
+            var headerRect = EditorGUILayout.BeginVertical();
+            EditorGUI.DrawRect(headerRect, new Color(0.15f, 0.15f, 0.15f, 1f));
+
+            EditorGUILayout.Space(8);
+
+            // ツール名
+            EditorGUILayout.LabelField("Editor Wallpaper", EditorStyles.whiteLargeLabel);
+
+            // 作者情報とリンク
             EditorGUILayout.BeginHorizontal();
-
-            // タイトル
-            EditorGUILayout.LabelField(Localization.MainTitle, headerStyle);
-
+            EditorGUILayout.LabelField("by kokoa factory", EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
+            if (GUILayout.Button("kokoa0429.booth.pm", EditorStyles.linkLabel))
+            {
+                Application.OpenURL("https://kokoa0429.booth.pm/");
+            }
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(6);
 
             // 言語切り替えボタン
+            EditorGUILayout.BeginHorizontal();
             var isJapanese = EditorBackgroundSettings.CurrentLanguage == EditorBackgroundSettings.Language.Japanese;
 
             if (GUILayout.Button(Localization.LanguageJapanese,
@@ -217,7 +232,16 @@ namespace EditorBackground
                 Repaint();
             }
 
+            GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.EndVertical();
+
+            EditorGUILayout.Space(8);
+
+            // 設定タイトル
+            EditorGUILayout.LabelField(Localization.MainTitle, headerStyle);
         }
 
         private void DrawMainToggle()
@@ -339,7 +363,6 @@ namespace EditorBackground
                 EditorGUILayout.Space(4);
 
                 // スライドショー有効化
-                EditorGUILayout.BeginHorizontal();
                 var newSlideshowEnabled = EditorGUILayout.Toggle(
                     new GUIContent(Localization.SlideshowEnabled, Localization.SlideshowEnabledTooltip),
                     slideshowEnabled);
@@ -353,12 +376,15 @@ namespace EditorBackground
                 // スライドショー無効時: ランダムボタン
                 if (slideshowEnabled)
                 {
+                    EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.PrefixLabel(new GUIContent(Localization.SlideshowInterval, Localization.SlideshowIntervalTooltip));
                     var newInterval = EditorGUILayout.Slider(slideshowInterval, 5f, 300f);
                     if (!Mathf.Approximately(newInterval, slideshowInterval))
                     {
                         slideshowInterval = newInterval;
                         EditorBackgroundSettings.SlideshowInterval = slideshowInterval;
                     }
+                    EditorGUILayout.EndHorizontal();
                 }
                 else
                 {
@@ -366,7 +392,7 @@ namespace EditorBackground
                     var folderImages = EditorBackgroundSettings.GetFolderImages();
                     using (new EditorGUI.DisabledGroupScope(folderImages.Length == 0))
                     {
-                        if (GUILayout.Button(new GUIContent(Localization.RandomizeImage, Localization.RandomizeImageTooltip), GUILayout.Width(80)))
+                        if (GUILayout.Button(new GUIContent(Localization.RandomizeImage, Localization.RandomizeImageTooltip)))
                         {
                             var randomPath = EditorBackgroundSettings.GetRandomImagePath();
                             if (!string.IsNullOrEmpty(randomPath))
@@ -377,7 +403,6 @@ namespace EditorBackground
                         }
                     }
                 }
-                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.Space(4);

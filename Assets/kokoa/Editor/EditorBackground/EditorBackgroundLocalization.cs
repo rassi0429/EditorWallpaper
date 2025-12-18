@@ -128,7 +128,7 @@ namespace EditorBackground
             : "Image folder for slideshow and random display";
         public static string SelectFolder => IsJapanese ? "フォルダを選択" : "Select Folder";
         public static string SlideshowEnabled => IsJapanese ? "スライドショー" : "Slideshow";
-        public static string RandomizeImage => IsJapanese ? "ランダム" : "Random";
+        public static string RandomizeImage => IsJapanese ? "ランダムに画像を変更" : "Randomize Image";
         public static string RandomizeImageTooltip => IsJapanese
             ? "フォルダからランダムな画像を選択"
             : "Select random image from folder";
