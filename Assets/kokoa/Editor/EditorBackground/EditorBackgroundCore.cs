@@ -454,8 +454,27 @@ namespace EditorBackground
             RemoveElement(window, BORDER_ELEMENT_NAME, borderElements);
         }
 
+        // 前回の設定値をキャッシュ（テクスチャ再読み込みが必要か判定用）
+        private static ImageSourceMode _lastImageSourceMode;
+        private static string _lastImageFolderPath;
+        private static bool _lastRandomPerWindow;
+        private static bool _lastGlobalMode;
+
         private static void RefreshAllBackgrounds()
         {
+            // テクスチャの再取得が必要かどうか判定
+            bool needsTextureRefresh =
+                _lastImageSourceMode != EditorBackgroundSettings.ImageSourceMode ||
+                _lastImageFolderPath != EditorBackgroundSettings.ImageFolderPath ||
+                _lastRandomPerWindow != EditorBackgroundSettings.RandomPerWindow ||
+                _lastGlobalMode != EditorBackgroundSettings.GlobalMode;
+
+            // 設定値を更新
+            _lastImageSourceMode = EditorBackgroundSettings.ImageSourceMode;
+            _lastImageFolderPath = EditorBackgroundSettings.ImageFolderPath;
+            _lastRandomPerWindow = EditorBackgroundSettings.RandomPerWindow;
+            _lastGlobalMode = EditorBackgroundSettings.GlobalMode;
+
             // 一度全部削除
             foreach (var window in processedWindows.ToList())
             {
@@ -466,15 +485,18 @@ namespace EditorBackground
             }
             processedWindows.Clear();
 
-            // ウィンドウごとのテクスチャもクリア
-            foreach (var tex in windowTextures.Values)
+            // ウィンドウごとのテクスチャは必要な時だけクリア
+            if (needsTextureRefresh)
             {
-                if (tex != null)
+                foreach (var tex in windowTextures.Values)
                 {
-                    Object.DestroyImmediate(tex);
+                    if (tex != null)
+                    {
+                        Object.DestroyImmediate(tex);
+                    }
                 }
+                windowTextures.Clear();
             }
-            windowTextures.Clear();
 
             if (!EditorBackgroundSettings.Enabled)
                 return;
