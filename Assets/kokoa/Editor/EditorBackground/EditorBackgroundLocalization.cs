@@ -69,6 +69,9 @@ namespace EditorBackground
         public static string GlobalModeTooltip => IsJapanese
             ? "ON: 全ウィンドウで1枚の背景を共有\nOFF: 各ウィンドウに個別の背景"
             : "ON: Share one background across all windows\nOFF: Individual background per window";
+        public static string GlobalModeHint => IsJapanese
+            ? "ON: 画面全体で1枚の壁紙を表示\nOFF: 各ウィンドウに個別の壁紙を表示"
+            : "ON: Display one wallpaper across the entire screen\nOFF: Display individual wallpaper per window";
 
         // カラーオーバーレイセクション
         public static string ColorOverlaySection => IsJapanese ? "カラーオーバーレイ" : "Color Overlay";

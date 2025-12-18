@@ -374,6 +374,8 @@ namespace EditorBackground
                 EditorBackgroundSettings.GlobalMode = globalMode;
             }
 
+            EditorGUILayout.HelpBox(Localization.GlobalModeHint, MessageType.Info);
+
             EditorGUILayout.EndVertical();
         }
 
