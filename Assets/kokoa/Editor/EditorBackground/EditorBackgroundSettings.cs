@@ -26,6 +26,15 @@ namespace EditorBackground
     }
 
     /// <summary>
+    /// 画像ソースモード（プレミアム機能）
+    /// </summary>
+    public enum ImageSourceMode
+    {
+        SingleImage,  // 単一画像
+        Folder        // フォルダ（スライドショー/ランダム）
+    }
+
+    /// <summary>
     /// JSON保存用のデータクラス
     /// </summary>
     [Serializable]
@@ -47,6 +56,12 @@ namespace EditorBackground
         public string borderColor = "6699FF80";
         public float borderWidth = 2f;
         public int language = 0;
+        // Premium features
+        public int imageSourceMode = 0;
+        public string imageFolderPath = "";
+        public bool slideshowEnabled = false;
+        public float slideshowInterval = 30f;
+        public bool randomPerWindow = false;
     }
 
     /// <summary>
@@ -55,6 +70,7 @@ namespace EditorBackground
     public static class EditorBackgroundSettings
     {
         private static readonly string SettingsPath = Path.Combine("ProjectSettings", "EditorBackgroundSettings.json");
+        private static readonly string PremiumFilePath = "Assets/kokoa/Editor/EditorBackground/SUPPORTER";
 
         public enum Language { Japanese, English }
 
@@ -75,7 +91,22 @@ namespace EditorBackground
         private static float _borderWidth = 2f;
         private static Language _language = Language.Japanese;
 
+        // Premium features
+        private static ImageSourceMode _imageSourceMode = ImageSourceMode.SingleImage;
+        private static string _imageFolderPath = "";
+        private static bool _slideshowEnabled = false;
+        private static float _slideshowInterval = 30f;
+        private static bool _randomPerWindow = false;
+        private static string[] _folderImages = null;
+        private static int _currentImageIndex = 0;
+        private static double _lastSlideChangeTime = 0;
+
         public static event Action OnSettingsChanged;
+
+        /// <summary>
+        /// プレミアム版かどうか（SUPPORTERファイルが存在するか）
+        /// </summary>
+        public static bool IsPremium => File.Exists(PremiumFilePath);
 
         // テクスチャキャッシュ
         private static Texture2D _cachedTexture;
@@ -311,6 +342,151 @@ namespace EditorBackground
             }
         }
 
+        // Premium properties
+        public static ImageSourceMode ImageSourceMode
+        {
+            get => _imageSourceMode;
+            set
+            {
+                if (_imageSourceMode != value)
+                {
+                    _imageSourceMode = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static string ImageFolderPath
+        {
+            get => _imageFolderPath;
+            set
+            {
+                if (_imageFolderPath != value)
+                {
+                    _imageFolderPath = value ?? "";
+                    _folderImages = null; // キャッシュクリア
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static bool SlideshowEnabled
+        {
+            get => _slideshowEnabled;
+            set
+            {
+                if (_slideshowEnabled != value)
+                {
+                    _slideshowEnabled = value;
+                    _lastSlideChangeTime = EditorApplication.timeSinceStartup;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static float SlideshowInterval
+        {
+            get => _slideshowInterval;
+            set
+            {
+                value = Mathf.Clamp(value, 5f, 300f);
+                if (!Mathf.Approximately(_slideshowInterval, value))
+                {
+                    _slideshowInterval = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        public static bool RandomPerWindow
+        {
+            get => _randomPerWindow;
+            set
+            {
+                if (_randomPerWindow != value)
+                {
+                    _randomPerWindow = value;
+                    Save();
+                    NotifySettingsChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// フォルダ内の画像一覧を取得
+        /// </summary>
+        public static string[] GetFolderImages()
+        {
+            if (_folderImages != null)
+                return _folderImages;
+
+            if (string.IsNullOrEmpty(_imageFolderPath) || !Directory.Exists(_imageFolderPath))
+            {
+                _folderImages = new string[0];
+                return _folderImages;
+            }
+
+            var extensions = new[] { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.tga" };
+            var images = new System.Collections.Generic.List<string>();
+
+            foreach (var ext in extensions)
+            {
+                images.AddRange(Directory.GetFiles(_imageFolderPath, ext, SearchOption.TopDirectoryOnly));
+            }
+
+            _folderImages = images.ToArray();
+            return _folderImages;
+        }
+
+        /// <summary>
+        /// スライドショーの次の画像を取得
+        /// </summary>
+        public static void UpdateSlideshow()
+        {
+            if (!IsPremium || !_slideshowEnabled || _imageSourceMode != ImageSourceMode.Folder)
+                return;
+
+            var images = GetFolderImages();
+            if (images.Length == 0)
+                return;
+
+            var currentTime = EditorApplication.timeSinceStartup;
+            if (currentTime - _lastSlideChangeTime >= _slideshowInterval)
+            {
+                _lastSlideChangeTime = currentTime;
+                _currentImageIndex = (_currentImageIndex + 1) % images.Length;
+                ImagePath = images[_currentImageIndex];
+            }
+        }
+
+        /// <summary>
+        /// ランダムな画像パスを取得（ウィンドウごと用）
+        /// </summary>
+        public static string GetRandomImagePath()
+        {
+            var images = GetFolderImages();
+            if (images.Length == 0)
+                return _imagePath;
+
+            return images[UnityEngine.Random.Range(0, images.Length)];
+        }
+
+        /// <summary>
+        /// ランダムな画像テクスチャを取得
+        /// </summary>
+        public static Texture2D GetRandomTexture()
+        {
+            var path = GetRandomImagePath();
+            if (string.IsNullOrEmpty(path))
+                return null;
+
+            return LoadExternalTexture(path);
+        }
+
         public static Texture2D GetTexture()
         {
             if (string.IsNullOrEmpty(_imagePath))
@@ -412,7 +588,13 @@ namespace EditorBackground
                     borderEnabled = _borderEnabled,
                     borderColor = ColorUtility.ToHtmlStringRGBA(_borderColor),
                     borderWidth = _borderWidth,
-                    language = (int)_language
+                    language = (int)_language,
+                    // Premium
+                    imageSourceMode = (int)_imageSourceMode,
+                    imageFolderPath = _imageFolderPath,
+                    slideshowEnabled = _slideshowEnabled,
+                    slideshowInterval = _slideshowInterval,
+                    randomPerWindow = _randomPerWindow
                 };
 
                 var json = JsonUtility.ToJson(data, true);
@@ -446,6 +628,13 @@ namespace EditorBackground
                     _borderEnabled = data.borderEnabled;
                     _borderWidth = data.borderWidth;
                     _language = (Language)data.language;
+
+                    // Premium
+                    _imageSourceMode = (ImageSourceMode)data.imageSourceMode;
+                    _imageFolderPath = data.imageFolderPath ?? "";
+                    _slideshowEnabled = data.slideshowEnabled;
+                    _slideshowInterval = data.slideshowInterval > 0 ? data.slideshowInterval : 30f;
+                    _randomPerWindow = data.randomPerWindow;
 
                     // 色の読み込み
                     if (ColorUtility.TryParseHtmlString("#" + data.tintColor, out var tint))
@@ -481,6 +670,13 @@ namespace EditorBackground
             _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
             _borderWidth = 2f;
             _language = Language.Japanese;
+            // Premium
+            _imageSourceMode = ImageSourceMode.SingleImage;
+            _imageFolderPath = "";
+            _slideshowEnabled = false;
+            _slideshowInterval = 30f;
+            _randomPerWindow = false;
+            _folderImages = null;
             ClearTextureCache();
             Save();
             NotifySettingsChanged();

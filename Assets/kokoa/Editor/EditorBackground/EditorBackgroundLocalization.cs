@@ -108,5 +108,41 @@ namespace EditorBackground
         public static string ImageInfo => IsJapanese ? "画像情報" : "Image Info";
         public static string ImageName => IsJapanese ? "ファイル名" : "Name";
         public static string ImageSize => IsJapanese ? "サイズ" : "Size";
+
+        // プレミアム機能
+        public static string PremiumSection => IsJapanese ? "サポーター特典" : "Supporter Features";
+        public static string PremiumNotAvailable => IsJapanese
+            ? "この機能はサポーター特典です。\nSUPPORTERファイルを配置すると有効になります。"
+            : "This feature is for supporters.\nPlace SUPPORTER file to enable.";
+        public static string ImageSourceMode => IsJapanese ? "画像ソース" : "Image Source";
+        public static string ImageSourceModeTooltip => IsJapanese
+            ? "単一画像またはフォルダから画像を選択"
+            : "Select image from single file or folder";
+        public static string[] ImageSourceModeOptions => IsJapanese
+            ? new[] { "画像ファイル", "フォルダ" }
+            : new[] { "Image File", "Folder" };
+
+        public static string ImageFolder => IsJapanese ? "画像フォルダ" : "Image Folder";
+        public static string ImageFolderTooltip => IsJapanese
+            ? "スライドショーやランダム表示に使用する画像フォルダ"
+            : "Image folder for slideshow and random display";
+        public static string SelectFolder => IsJapanese ? "フォルダを選択" : "Select Folder";
+        public static string SlideshowEnabled => IsJapanese ? "スライドショー" : "Slideshow";
+        public static string RandomizeImage => IsJapanese ? "ランダム" : "Random";
+        public static string RandomizeImageTooltip => IsJapanese
+            ? "フォルダからランダムな画像を選択"
+            : "Select random image from folder";
+        public static string SlideshowEnabledTooltip => IsJapanese
+            ? "一定時間ごとに画像を切り替える"
+            : "Change image at regular intervals";
+        public static string SlideshowInterval => IsJapanese ? "切り替え間隔 (秒)" : "Interval (sec)";
+        public static string SlideshowIntervalTooltip => IsJapanese
+            ? "画像を切り替える間隔（5〜300秒）"
+            : "Interval to change images (5-300 seconds)";
+        public static string RandomPerWindow => IsJapanese ? "ウィンドウごとにランダム" : "Random per Window";
+        public static string RandomPerWindowTooltip => IsJapanese
+            ? "グローバルモードOFF時、各ウィンドウにランダムな画像を表示"
+            : "Display random image per window when Global Mode is OFF";
+        public static string FolderImageCount => IsJapanese ? "フォルダ内の画像数" : "Images in folder";
     }
 }

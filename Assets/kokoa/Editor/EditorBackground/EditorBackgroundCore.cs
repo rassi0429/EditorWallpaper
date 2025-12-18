@@ -21,6 +21,9 @@ namespace EditorBackground
         private static Dictionary<EditorWindow, VisualElement> overlayElements = new Dictionary<EditorWindow, VisualElement>();
         private static Dictionary<EditorWindow, VisualElement> borderElements = new Dictionary<EditorWindow, VisualElement>();
 
+        // ランダム画像用：ウィンドウごとのテクスチャ
+        private static Dictionary<EditorWindow, Texture2D> windowTextures = new Dictionary<EditorWindow, Texture2D>();
+
         // グローバル背景の基準となる境界
         private static Rect globalBounds;
 
@@ -37,6 +40,9 @@ namespace EditorBackground
 
             if (!EditorBackgroundSettings.Enabled)
                 return;
+
+            // スライドショー更新（プレミアム機能）
+            EditorBackgroundSettings.UpdateSlideshow();
 
             // グローバルモードの場合のみ境界を更新
             if (EditorBackgroundSettings.GlobalMode)
@@ -96,6 +102,20 @@ namespace EditorBackground
             CleanupDictionary(backgroundElements);
             CleanupDictionary(overlayElements);
             CleanupDictionary(borderElements);
+            CleanupTextureDictionary(windowTextures);
+        }
+
+        private static void CleanupTextureDictionary(Dictionary<EditorWindow, Texture2D> dict)
+        {
+            var keysToRemove = dict.Keys.Where(k => k == null).ToList();
+            foreach (var key in keysToRemove)
+            {
+                if (dict[key] != null)
+                {
+                    Object.DestroyImmediate(dict[key]);
+                }
+                dict.Remove(key);
+            }
         }
 
         private static void CleanupDictionary(Dictionary<EditorWindow, VisualElement> dict)
@@ -120,7 +140,30 @@ namespace EditorBackground
                 return;
 
             // 背景画像
-            var texture = EditorBackgroundSettings.GetTexture();
+            Texture2D texture;
+
+            // プレミアム機能：フォルダモード + グローバルモードOFF + ランダム画像有効時
+            if (!EditorBackgroundSettings.GlobalMode &&
+                EditorBackgroundSettings.IsPremium &&
+                EditorBackgroundSettings.ImageSourceMode == ImageSourceMode.Folder &&
+                EditorBackgroundSettings.RandomPerWindow &&
+                EditorBackgroundSettings.GetFolderImages().Length > 0)
+            {
+                // ウィンドウごとにランダムなテクスチャを取得（キャッシュ）
+                if (!windowTextures.TryGetValue(window, out texture) || texture == null)
+                {
+                    texture = EditorBackgroundSettings.GetRandomTexture();
+                    if (texture != null)
+                    {
+                        windowTextures[window] = texture;
+                    }
+                }
+            }
+            else
+            {
+                texture = EditorBackgroundSettings.GetTexture();
+            }
+
             if (texture != null)
             {
                 ApplyBackground(window, texture);
@@ -422,6 +465,16 @@ namespace EditorBackground
                 }
             }
             processedWindows.Clear();
+
+            // ウィンドウごとのテクスチャもクリア
+            foreach (var tex in windowTextures.Values)
+            {
+                if (tex != null)
+                {
+                    Object.DestroyImmediate(tex);
+                }
+            }
+            windowTextures.Clear();
 
             if (!EditorBackgroundSettings.Enabled)
                 return;

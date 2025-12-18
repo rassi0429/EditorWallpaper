@@ -25,6 +25,13 @@ namespace EditorBackground
         private Color borderColor;
         private float borderWidth;
 
+        // Premium features
+        private ImageSourceMode imageSourceMode;
+        private string imageFolderPath;
+        private bool slideshowEnabled;
+        private float slideshowInterval;
+        private bool randomPerWindow;
+
         private Vector2 scrollPosition;
 
         // UI Styles
@@ -122,6 +129,13 @@ namespace EditorBackground
             borderEnabled = EditorBackgroundSettings.BorderEnabled;
             borderColor = EditorBackgroundSettings.BorderColor;
             borderWidth = EditorBackgroundSettings.BorderWidth;
+
+            // Premium features
+            imageSourceMode = EditorBackgroundSettings.ImageSourceMode;
+            imageFolderPath = EditorBackgroundSettings.ImageFolderPath;
+            slideshowEnabled = EditorBackgroundSettings.SlideshowEnabled;
+            slideshowInterval = EditorBackgroundSettings.SlideshowInterval;
+            randomPerWindow = EditorBackgroundSettings.RandomPerWindow;
 
             // GetTexture() は外部ファイル・アセット両方に対応
             selectedTexture = EditorBackgroundSettings.GetTexture();
@@ -227,41 +241,143 @@ namespace EditorBackground
             EditorGUILayout.LabelField(Localization.BackgroundImageSection, EditorStyles.boldLabel);
             EditorGUILayout.Space(6);
 
-            // 画像選択
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PrefixLabel(Localization.Image);
-
-            // ファイル選択ボタン
-            if (GUILayout.Button(Localization.SelectFile, GUILayout.Width(100)))
+            // プレミアム機能：画像ソースモード選択
+            if (EditorBackgroundSettings.IsPremium)
             {
-                var path = EditorUtility.OpenFilePanel(
-                    Localization.SelectImageFile,
-                    "",
-                    "png,jpg,jpeg,gif,bmp,tga");
-
-                if (!string.IsNullOrEmpty(path))
+                var newSourceModeIndex = EditorGUILayout.Popup(
+                    new GUIContent(Localization.ImageSourceMode, Localization.ImageSourceModeTooltip),
+                    (int)imageSourceMode,
+                    Localization.ImageSourceModeOptions);
+                if (newSourceModeIndex != (int)imageSourceMode)
                 {
-                    EditorBackgroundSettings.ImagePath = path;
-                    selectedTexture = EditorBackgroundSettings.GetTexture();
+                    imageSourceMode = (ImageSourceMode)newSourceModeIndex;
+                    EditorBackgroundSettings.ImageSourceMode = imageSourceMode;
                 }
+
+                EditorGUILayout.Space(4);
             }
 
-            // クリアボタン
-            using (new EditorGUI.DisabledGroupScope(selectedTexture == null))
+            // 単一画像モード または 非プレミアム
+            if (!EditorBackgroundSettings.IsPremium || imageSourceMode == ImageSourceMode.SingleImage)
             {
-                if (GUILayout.Button(Localization.ClearImage, GUILayout.Width(50)))
+                // 画像選択
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(Localization.Image);
+
+                // ファイル選択ボタン
+                if (GUILayout.Button(Localization.SelectFile, GUILayout.Width(100)))
                 {
-                    EditorBackgroundSettings.ImagePath = "";
-                    selectedTexture = null;
+                    var path = EditorUtility.OpenFilePanel(
+                        Localization.SelectImageFile,
+                        "",
+                        "png,jpg,jpeg,gif,bmp,tga");
+
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        EditorBackgroundSettings.ImagePath = path;
+                        selectedTexture = EditorBackgroundSettings.GetTexture();
+                    }
+                }
+
+                // クリアボタン
+                using (new EditorGUI.DisabledGroupScope(selectedTexture == null))
+                {
+                    if (GUILayout.Button(Localization.ClearImage, GUILayout.Width(50)))
+                    {
+                        EditorBackgroundSettings.ImagePath = "";
+                        selectedTexture = null;
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                // 現在選択中のファイル名を表示
+                if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
+                {
+                    var fileName = Path.GetFileName(EditorBackgroundSettings.ImagePath);
+                    EditorGUILayout.LabelField("  " + fileName, EditorStyles.miniLabel);
                 }
             }
-            EditorGUILayout.EndHorizontal();
-
-            // 現在選択中のファイル名を表示
-            if (!string.IsNullOrEmpty(EditorBackgroundSettings.ImagePath))
+            // フォルダモード（プレミアムのみ）
+            else
             {
-                var fileName = Path.GetFileName(EditorBackgroundSettings.ImagePath);
-                EditorGUILayout.LabelField("  " + fileName, EditorStyles.miniLabel);
+                // 画像フォルダ選択
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.PrefixLabel(new GUIContent(Localization.ImageFolder, Localization.ImageFolderTooltip));
+
+                if (GUILayout.Button(Localization.SelectFolder, GUILayout.Width(100)))
+                {
+                    var path = EditorUtility.OpenFolderPanel(
+                        Localization.SelectFolder,
+                        imageFolderPath,
+                        "");
+
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        imageFolderPath = path;
+                        EditorBackgroundSettings.ImageFolderPath = path;
+                    }
+                }
+
+                using (new EditorGUI.DisabledGroupScope(string.IsNullOrEmpty(imageFolderPath)))
+                {
+                    if (GUILayout.Button(Localization.ClearImage, GUILayout.Width(50)))
+                    {
+                        imageFolderPath = "";
+                        EditorBackgroundSettings.ImageFolderPath = "";
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                // 選択中のフォルダパスと画像数を表示
+                if (!string.IsNullOrEmpty(imageFolderPath))
+                {
+                    EditorGUILayout.LabelField("  " + imageFolderPath, EditorStyles.miniLabel);
+                    var imageCount = EditorBackgroundSettings.GetFolderImages().Length;
+                    EditorGUILayout.LabelField($"  {Localization.FolderImageCount}: {imageCount}", EditorStyles.miniLabel);
+                }
+
+                EditorGUILayout.Space(4);
+
+                // スライドショー有効化
+                EditorGUILayout.BeginHorizontal();
+                var newSlideshowEnabled = EditorGUILayout.Toggle(
+                    new GUIContent(Localization.SlideshowEnabled, Localization.SlideshowEnabledTooltip),
+                    slideshowEnabled);
+                if (newSlideshowEnabled != slideshowEnabled)
+                {
+                    slideshowEnabled = newSlideshowEnabled;
+                    EditorBackgroundSettings.SlideshowEnabled = slideshowEnabled;
+                }
+
+                // スライドショー有効時: 間隔スライダー
+                // スライドショー無効時: ランダムボタン
+                if (slideshowEnabled)
+                {
+                    var newInterval = EditorGUILayout.Slider(slideshowInterval, 5f, 300f);
+                    if (!Mathf.Approximately(newInterval, slideshowInterval))
+                    {
+                        slideshowInterval = newInterval;
+                        EditorBackgroundSettings.SlideshowInterval = slideshowInterval;
+                    }
+                }
+                else
+                {
+                    // ランダムボタン
+                    var folderImages = EditorBackgroundSettings.GetFolderImages();
+                    using (new EditorGUI.DisabledGroupScope(folderImages.Length == 0))
+                    {
+                        if (GUILayout.Button(new GUIContent(Localization.RandomizeImage, Localization.RandomizeImageTooltip), GUILayout.Width(80)))
+                        {
+                            var randomPath = EditorBackgroundSettings.GetRandomImagePath();
+                            if (!string.IsNullOrEmpty(randomPath))
+                            {
+                                EditorBackgroundSettings.ImagePath = randomPath;
+                                selectedTexture = EditorBackgroundSettings.GetTexture();
+                            }
+                        }
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.Space(4);
@@ -375,6 +491,24 @@ namespace EditorBackground
             }
 
             EditorGUILayout.HelpBox(Localization.GlobalModeHint, MessageType.Info);
+
+            // プレミアム機能：ウィンドウごとにランダム（フォルダモード + グローバルモードOFF時のみ有効）
+            if (EditorBackgroundSettings.IsPremium && imageSourceMode == ImageSourceMode.Folder)
+            {
+                EditorGUILayout.Space(4);
+
+                using (new EditorGUI.DisabledGroupScope(globalMode))
+                {
+                    var newRandomPerWindow = EditorGUILayout.Toggle(
+                        new GUIContent(Localization.RandomPerWindow, Localization.RandomPerWindowTooltip),
+                        randomPerWindow);
+                    if (newRandomPerWindow != randomPerWindow)
+                    {
+                        randomPerWindow = newRandomPerWindow;
+                        EditorBackgroundSettings.RandomPerWindow = randomPerWindow;
+                    }
+                }
+            }
 
             EditorGUILayout.EndVertical();
         }
