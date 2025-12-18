@@ -39,10 +39,20 @@ namespace EditorBackground
         public static string TileScaleTooltip => IsJapanese
             ? "画像の大きさ (0.01 = 小さく, 1 = 等倍, 5 = 大きく)"
             : "Image size (0.01 = smaller, 1 = original, 5 = larger)";
-        public static string CornerPosition => IsJapanese ? "配置位置" : "Position";
+        public static string CornerPositionLabel => IsJapanese ? "配置位置" : "Position";
         public static string CornerPositionTooltip => IsJapanese
             ? "画像を配置する角の位置"
             : "Corner position for the image";
+
+        // スケールモード選択肢
+        public static string[] ScaleModeOptions => IsJapanese
+            ? new[] { "拡大してクロップ", "収まるように縮小", "引き伸ばし", "タイル", "コーナー配置" }
+            : new[] { "Scale and Crop", "Scale to Fit", "Stretch to Fill", "Tile", "Corner" };
+
+        // コーナー位置選択肢
+        public static string[] CornerPositionOptions => IsJapanese
+            ? new[] { "左上", "右上", "左下", "右下" }
+            : new[] { "Top Left", "Top Right", "Bottom Left", "Bottom Right" };
         public static string TintColor => IsJapanese ? "色調" : "Tint Color";
         public static string TintColorTooltip => IsJapanese
             ? "背景画像に適用する色調"

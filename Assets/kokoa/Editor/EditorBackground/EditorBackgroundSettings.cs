@@ -26,24 +26,33 @@ namespace EditorBackground
     }
 
     /// <summary>
+    /// JSON保存用のデータクラス
+    /// </summary>
+    [Serializable]
+    public class EditorBackgroundSettingsData
+    {
+        public bool enabled = true;
+        public string imagePath = "";
+        public float opacity = 0.08f;
+        public int scaleMode = 0;
+        public float tileScale = 1f;
+        public int cornerPosition = 3;
+        public string tintColor = "FFFFFFFF";
+        public bool globalMode = true;
+        public bool overlayEnabled = false;
+        public string overlayColor = "334CCC1A";
+        public bool borderEnabled = false;
+        public string borderColor = "6699FF80";
+        public float borderWidth = 2f;
+        public int language = 0;
+    }
+
+    /// <summary>
     /// 設定データを管理する静的クラス
     /// </summary>
     public static class EditorBackgroundSettings
     {
-        private const string KEY_ENABLED = "EditorBackground_Enabled";
-        private const string KEY_IMAGE_PATH = "EditorBackground_ImagePath";
-        private const string KEY_OPACITY = "EditorBackground_Opacity";
-        private const string KEY_SCALE_MODE = "EditorBackground_ScaleMode";
-        private const string KEY_TINT_COLOR = "EditorBackground_TintColor";
-        private const string KEY_GLOBAL_MODE = "EditorBackground_GlobalMode";
-        private const string KEY_OVERLAY_ENABLED = "EditorBackground_OverlayEnabled";
-        private const string KEY_OVERLAY_COLOR = "EditorBackground_OverlayColor";
-        private const string KEY_BORDER_ENABLED = "EditorBackground_BorderEnabled";
-        private const string KEY_BORDER_COLOR = "EditorBackground_BorderColor";
-        private const string KEY_BORDER_WIDTH = "EditorBackground_BorderWidth";
-        private const string KEY_LANGUAGE = "EditorBackground_Language";
-        private const string KEY_TILE_SCALE = "EditorBackground_TileScale";
-        private const string KEY_CORNER_POSITION = "EditorBackground_CornerPosition";
+        private static readonly string SettingsPath = Path.Combine("ProjectSettings", "EditorBackgroundSettings.json");
 
         public enum Language { Japanese, English }
 
@@ -292,7 +301,6 @@ namespace EditorBackground
 
             if (texture == null)
             {
-                // Debug.LogWarning($"[EditorBackground] Image not found: {_imagePath}");
                 return null;
             }
 
@@ -351,49 +359,70 @@ namespace EditorBackground
 
         public static void Save()
         {
-            EditorPrefs.SetBool(KEY_ENABLED, _enabled);
-            EditorPrefs.SetString(KEY_IMAGE_PATH, _imagePath);
-            EditorPrefs.SetFloat(KEY_OPACITY, _opacity);
-            EditorPrefs.SetInt(KEY_SCALE_MODE, (int)_scaleMode);
-            EditorPrefs.SetFloat(KEY_TILE_SCALE, _tileScale);
-            EditorPrefs.SetInt(KEY_CORNER_POSITION, (int)_cornerPosition);
-            EditorPrefs.SetString(KEY_TINT_COLOR, ColorUtility.ToHtmlStringRGBA(_tintColor));
-            EditorPrefs.SetBool(KEY_GLOBAL_MODE, _globalMode);
-            EditorPrefs.SetBool(KEY_OVERLAY_ENABLED, _overlayEnabled);
-            EditorPrefs.SetString(KEY_OVERLAY_COLOR, ColorUtility.ToHtmlStringRGBA(_overlayColor));
-            EditorPrefs.SetBool(KEY_BORDER_ENABLED, _borderEnabled);
-            EditorPrefs.SetString(KEY_BORDER_COLOR, ColorUtility.ToHtmlStringRGBA(_borderColor));
-            EditorPrefs.SetFloat(KEY_BORDER_WIDTH, _borderWidth);
-            EditorPrefs.SetInt(KEY_LANGUAGE, (int)_language);
+            try
+            {
+                var data = new EditorBackgroundSettingsData
+                {
+                    enabled = _enabled,
+                    imagePath = _imagePath,
+                    opacity = _opacity,
+                    scaleMode = (int)_scaleMode,
+                    tileScale = _tileScale,
+                    cornerPosition = (int)_cornerPosition,
+                    tintColor = ColorUtility.ToHtmlStringRGBA(_tintColor),
+                    globalMode = _globalMode,
+                    overlayEnabled = _overlayEnabled,
+                    overlayColor = ColorUtility.ToHtmlStringRGBA(_overlayColor),
+                    borderEnabled = _borderEnabled,
+                    borderColor = ColorUtility.ToHtmlStringRGBA(_borderColor),
+                    borderWidth = _borderWidth,
+                    language = (int)_language
+                };
+
+                var json = JsonUtility.ToJson(data, true);
+                File.WriteAllText(SettingsPath, json);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[EditorBackground] Failed to save settings: {e.Message}");
+            }
         }
 
         public static void Load()
         {
-            _enabled = EditorPrefs.GetBool(KEY_ENABLED, true);
-            _imagePath = EditorPrefs.GetString(KEY_IMAGE_PATH, "");
-            _opacity = EditorPrefs.GetFloat(KEY_OPACITY, 0.08f);
-            _scaleMode = (BackgroundScaleMode)EditorPrefs.GetInt(KEY_SCALE_MODE, (int)BackgroundScaleMode.ScaleAndCrop);
-            _tileScale = EditorPrefs.GetFloat(KEY_TILE_SCALE, 1f);
-            _cornerPosition = (CornerPosition)EditorPrefs.GetInt(KEY_CORNER_POSITION, (int)CornerPosition.BottomRight);
-            _globalMode = EditorPrefs.GetBool(KEY_GLOBAL_MODE, true);
-            _overlayEnabled = EditorPrefs.GetBool(KEY_OVERLAY_ENABLED, false);
-            _borderEnabled = EditorPrefs.GetBool(KEY_BORDER_ENABLED, false);
-            _borderWidth = EditorPrefs.GetFloat(KEY_BORDER_WIDTH, 2f);
-            _language = (Language)EditorPrefs.GetInt(KEY_LANGUAGE, (int)Language.Japanese);
-
-            _tintColor = LoadColor(KEY_TINT_COLOR, Color.white);
-            _overlayColor = LoadColor(KEY_OVERLAY_COLOR, new Color(0.2f, 0.4f, 0.8f, 0.1f));
-            _borderColor = LoadColor(KEY_BORDER_COLOR, new Color(0.4f, 0.6f, 1f, 0.5f));
-        }
-
-        private static Color LoadColor(string key, Color defaultColor)
-        {
-            var colorString = EditorPrefs.GetString(key, "");
-            if (!string.IsNullOrEmpty(colorString) && ColorUtility.TryParseHtmlString("#" + colorString, out var color))
+            try
             {
-                return color;
+                if (File.Exists(SettingsPath))
+                {
+                    var json = File.ReadAllText(SettingsPath);
+                    var data = JsonUtility.FromJson<EditorBackgroundSettingsData>(json);
+
+                    _enabled = data.enabled;
+                    _imagePath = data.imagePath ?? "";
+                    _opacity = data.opacity;
+                    _scaleMode = (BackgroundScaleMode)data.scaleMode;
+                    _tileScale = data.tileScale;
+                    _cornerPosition = (CornerPosition)data.cornerPosition;
+                    _globalMode = data.globalMode;
+                    _overlayEnabled = data.overlayEnabled;
+                    _borderEnabled = data.borderEnabled;
+                    _borderWidth = data.borderWidth;
+                    _language = (Language)data.language;
+
+                    // 色の読み込み
+                    if (ColorUtility.TryParseHtmlString("#" + data.tintColor, out var tint))
+                        _tintColor = tint;
+                    if (ColorUtility.TryParseHtmlString("#" + data.overlayColor, out var overlay))
+                        _overlayColor = overlay;
+                    if (ColorUtility.TryParseHtmlString("#" + data.borderColor, out var border))
+                        _borderColor = border;
+                }
             }
-            return defaultColor;
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[EditorBackground] Failed to load settings, using defaults: {e.Message}");
+                ResetToDefault();
+            }
         }
 
         public static void ResetToDefault()
@@ -412,6 +441,7 @@ namespace EditorBackground
             _borderColor = new Color(0.4f, 0.6f, 1f, 0.5f);
             _borderWidth = 2f;
             _language = Language.Japanese;
+            ClearTextureCache();
             Save();
             NotifySettingsChanged();
         }

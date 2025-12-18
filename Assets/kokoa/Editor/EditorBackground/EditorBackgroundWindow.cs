@@ -252,12 +252,13 @@ namespace EditorBackground
             EditorGUILayout.Space(4);
 
             // スケールモード
-            var newScaleMode = (BackgroundScaleMode)EditorGUILayout.EnumPopup(
+            var newScaleModeIndex = EditorGUILayout.Popup(
                 new GUIContent(Localization.ScaleMode, Localization.ScaleModeTooltip),
-                scaleMode);
-            if (newScaleMode != scaleMode)
+                (int)scaleMode,
+                Localization.ScaleModeOptions);
+            if (newScaleModeIndex != (int)scaleMode)
             {
-                scaleMode = newScaleMode;
+                scaleMode = (BackgroundScaleMode)newScaleModeIndex;
                 EditorBackgroundSettings.ScaleMode = scaleMode;
             }
 
@@ -283,12 +284,13 @@ namespace EditorBackground
             {
                 EditorGUILayout.Space(4);
 
-                var newCornerPosition = (CornerPosition)EditorGUILayout.EnumPopup(
-                    new GUIContent(Localization.CornerPosition, Localization.CornerPositionTooltip),
-                    cornerPosition);
-                if (newCornerPosition != cornerPosition)
+                var newCornerPositionIndex = EditorGUILayout.Popup(
+                    new GUIContent(Localization.CornerPositionLabel, Localization.CornerPositionTooltip),
+                    (int)cornerPosition,
+                    Localization.CornerPositionOptions);
+                if (newCornerPositionIndex != (int)cornerPosition)
                 {
-                    cornerPosition = newCornerPosition;
+                    cornerPosition = (CornerPosition)newCornerPositionIndex;
                     EditorBackgroundSettings.CornerPosition = cornerPosition;
                 }
             }
