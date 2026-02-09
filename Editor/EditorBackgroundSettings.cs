@@ -70,7 +70,7 @@ namespace EditorBackground
     public static class EditorBackgroundSettings
     {
         private static readonly string SettingsPath = Path.Combine("ProjectSettings", "EditorBackgroundSettings.json");
-        private static readonly string PremiumFilePath = "Assets/kokoa/Editor/EditorBackground/SUPPORTER";
+        private static readonly string PremiumFilePath = "Assets/kokoa/Editor/SUPPORTER";
 
         public enum Language { Japanese, English }
 
